@@ -1,5 +1,6 @@
 #!/bin/env python
 
+# THIRD PARTY
 import sqlite3
 from pydantic import BaseModel
 
@@ -23,10 +24,8 @@ class MasterTimer:
     For example, when as astral event causes a monstrous effect, this controls the
     timing for how long that effect lasts for.
     """
-
     def __init__(self):
         self.cursor = c.cursor()
-
         self.astral_events = []
         self.natural_events = []
 
@@ -66,7 +65,11 @@ class MasterTimer:
         fetch_natural()
         self._finalize_events()
 
-    def _finalize_events(self):
+    def _finalize_events(self): # should consider renaming to 'validate_events'
+        """ finalize_events takes the events that are attempting to happen
+            and double checks their conditions against the event_prereqs models.
+            if they pass this testing, they are pushed into the master_timeline.
+        """
         def verify_astral():
             place_holder = True
 
