@@ -1,5 +1,13 @@
 #!/bin/env python
 
+""" rarity_calc serves as a singular place to change the probability
+    of most events through the Almanac run.
+    Most events use the norm_rarity, which returns a 1 - 5 value 
+    skewed towards the higher numbers
+"""
+
+
+# BUILT INS
 import random
 
 
