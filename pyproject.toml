@@ -2,7 +2,7 @@
 name = "almanac"
 version = "0.1.0"
 description = ""
-authors = ["Your Name <you@example.com>"]
+authors = ["Benjamin Farmer benjamin@sanjuandata.com"]
 readme = "README.md"
 
 [tool.poetry.dependencies]

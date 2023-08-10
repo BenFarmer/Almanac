@@ -1,14 +1,27 @@
 #!/bin/env python
 
+""" The majority of Almanacs function is controlled from this module.
+    day_roller 'rolls' through each day within a year
+    day_roller also creates all of the required sqlite tables:
+        - master_timeline
+        - regional_weather
+        - astral_events
+        - natural_events
+"""
+
+# BUILT INS
+import math, random
+
+# THIRD PARTY
+import sqlite3
+
+# PERSONAL
 from almanacmodules import cfg, caller
 from almanacmodules.weather import RegionalWeather
 from almanacmodules.event_coordinator import EventCoordinator
 from almanacmodules.location_assembler import LocationAssembler
 from almanacmodules.master_timer import MasterTimer
 from almanacmodules.get_sheets import MasterConfig
-
-import math, random
-import sqlite3
 
 # DAY ROLLER CONSTANTS
 SEASON_NUM_START = 0  # SPRING

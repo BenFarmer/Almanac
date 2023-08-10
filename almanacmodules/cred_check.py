@@ -1,7 +1,15 @@
 #!/bin/env python
 
+""" this module validates the credentials stored in a token.json
+    to give readonly access to the google sheet. If the credential
+    validation fails, which is common as it has a short expiration date,
+    then the user will be prompted to sign into google to gain access again.
+"""
+
+# BUILT INS
 import os.path
 
+# THIRD PARTY
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import (
     Credentials,
@@ -10,8 +18,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
+SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
 def confirmation():
     creds = None

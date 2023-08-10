@@ -1,11 +1,21 @@
 #!/bin/env python
 
+""" event_coordinator also determines if a likely or random event will attempt to occur.
+    Any astral or natural event that does attempt to occur will be inserted into
+    their respective table to be verified later by master timer.
+"""
+
+
+# BUILT IN
+import random
+
+# THIRD PARTY
 import sqlite3
+
+# PERSONAL
 from almanacmodules import cfg
 from almanacmodules.astral import AstralInfo
 from almanacmodules.natural import NaturalInfo
-
-import random
 
 c = sqlite3.connect(r"/home/ben/Envs/databases/sqlite/Almanac.db")
 
@@ -32,13 +42,17 @@ SEVERITY = 2
 
 
 class LikelyEvent:
+    """ this takes the precipitation score of each region and decides whether or not
+        precipitation occurs in that region. If precipitation does occur, then this
+        updates both regional_weather and master_timeline tables with that information.
+        This needs to then:
+            - communicate with prereqs module to see if precipitation causes any events
+    """
     def __init__(self, day_num, season, country_id):
         self.day_num = day_num
         self.season = season
         self.country_id = country_id
-
         self.past_date = self.day_num - DAYS_PAST
-
         self.cursor = c.cursor()
 
     def read_weather(self):
@@ -59,7 +73,7 @@ class LikelyEvent:
             )
         self._likely_event_logic(past_weather)
 
-    def _likely_event_logic(self, past_weather):
+    def _likely_event_logic(self, past_weather): # this should probably be renamed to something like 'update precip'
         region_index = past_weather[-1][
             REGION_ID
         ]  # returns the largest region_id which is also the number of regions
@@ -86,9 +100,6 @@ class LikelyEvent:
                 c.commit()
 
 
-#            print(f"region: {region[2]}, score: {score}")
-
-
 class RandomEvent:
     def __init__(self, day_num, season, country_id, indv_biomes_config):
         """LargeEvent handles the decisions needed to piece together a large scale event.
@@ -99,7 +110,6 @@ class RandomEvent:
         self.country_id = country_id
         self.indv_biomes_config = indv_biomes_config
         self.event_details = None
-
         self.cursor = c.cursor()
 
     def event(self):

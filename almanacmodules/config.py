@@ -1,10 +1,17 @@
 #!/bin/env python
 
+""" config.py contains the BaseModel information for all
+    of the pydantic classes used within Almanac. It is also used
+    for reference of what fields each class contains.
+"""
+
+# BUILT INS
+import re
+
+# THIRD PARTY
 from pydantic import BaseModel
 from pydantic import ValidationError
 from pydantic import validator
-
-import re
 
 #       RE USED VALIDATOR FUNCTIONS
 

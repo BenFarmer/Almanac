@@ -1,20 +1,28 @@
 #!/usr/bin/env/python
 
-import random
-from almanacmodules import cfg  # initial config that I'm moving away from for most info
-from almanacmodules import (
-    caller,
-)  # works in conjunction with cfg to return items from lists
-from almanacmodules.rarity_calc import (
-    PercentileCheck,
-)  # re-usable code to return rarity values
+"""
+"""
 
-from almanacmodules.get_sheets import (
-    MasterConfig,
-)  # usable google sheets in pydantic form
+# BUILT INS
+import random
+
+# THIRD PARTY
+
+# PERSONAL
+from almanacmodules import cfg  # initial config that I'm moving away from for most info
+from almanacmodules import caller  # works in conjunction with cfg to return items from lists
+from almanacmodules.rarity_calc import PercentileCheck # re-usable code to return rarity values
+from almanacmodules.get_sheets import MasterConfig # usable google sheets in pydantic form
 
 
 class AstralInfo:
+    """ returns the information related to an astral event occuring.
+        this includes:
+            - the reference id number of the astral body
+            - the name of astral body
+            - the type of the astral body
+            - the event or movement that the astral body is experiencing
+    """
     def __init__(self):
         # these 3 lines collect the configs for all the astral and effects info
         master_config = MasterConfig()
