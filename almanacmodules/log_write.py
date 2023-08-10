@@ -1,6 +1,10 @@
 #!/bin/env python
-# user_log_write.py
 
+""" 
+"""
+
+# user_log_write.py
+# BUILT INS
 import csv
 from pathlib import Path
 import os

@@ -1,4 +1,11 @@
 #!/bin/env python
+
+""" caller.py is used to return values based on a passed number
+    from a cfg file
+"""
+
+
+# PERSONAL
 from almanacmodules import cfg
 
 

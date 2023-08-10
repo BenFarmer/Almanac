@@ -1,16 +1,27 @@
 #!/bin/env python
 
-from almanacmodules import cred_check
-from almanacmodules import config
+""" get_sheets is one of the first modules to be run in Almanac and
+    controls the gathering of information from the relevant google
+    sheet. Note that the google sheet id is controled by the variable
+    'EXTENDED_CFG_ID' and custom sheet ids can replace it here.
+    When extra tabs of information are added to the google sheet,
+    they must also be added here.
+"""
 
+
+# BUILT IN
 import os.path
+
+# THIRD-PARTY
 from google.auth.transport.requests import Request
-from google.oauth2.credentials import (
-    Credentials,
-)
+from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+
+# PERSONAL
+from almanacmodules import cred_check
+from almanacmodules import config
 
 EXTENDED_CFG_ID = "16Q2BKEWQW5A2nQ77AQbSINZ7tG4LJRVhGHfvfKHC0EM"
 ranges = (
@@ -60,6 +71,11 @@ class MasterConfig:
 
 
 class SheetConversion:
+    """ This important class takes the raw information from the supplied
+        google sheet ranges and fills them into their according pydantic
+        models. That data is then picked up by the Master Config class
+        and returned in that final form.
+    """
     def __init__(self):
         self.raw_data = self.sheet_api(
             cred_check.confirmation()

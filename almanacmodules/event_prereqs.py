@@ -1,6 +1,12 @@
 #!/bin/env python
 
+""" this controls the pydantic BaseModels for various events to
+    be referenced by event_coordinator to determine if events are
+    able to occur
+"""
 
+
+# THIRD PARTY
 from pydantic import BaseModel
 
 

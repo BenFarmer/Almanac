@@ -1,11 +1,20 @@
 #!/bin/env python
 
-from almanacmodules.get_sheets import MasterConfig
-from pydantic import BaseModel
+""" location_assembler takes the biome data for the country that Almanac
+    is processing and creates its version of a 'map' of where each biome
+    within the country lies.
+"""
+
+
+# BUILT INS
+import math, random
 from operator import itemgetter
 
-import math
-import random
+# THIRD PARTY
+from pydantic import BaseModel
+
+# PERSONAL
+from almanacmodules.get_sheets import MasterConfig
 
 
 # pydantic class schema
