@@ -2,7 +2,7 @@
 
 """ weather.py is responsible for determining the precipitation
     value of every respective region within a selected country
-    through a run of Almanac. 
+    through a run of Almanac.
     The occurance of precipitation is based off of a floating
     precipitation chance that is dependent on:
         - time of year (season)
@@ -14,8 +14,8 @@
 """
 
 # BUILT INS
-import math
 import random
+import logging
 
 # THIRD PARTY
 import sqlite3
@@ -39,23 +39,23 @@ FALL_BASE = 30
 WINTER_BASE = 20
 
 # precip_chance biome variables
-DESERT_MOD = 5      # // DESERT_MOD
-JUNGLE_MOD = 2      # * JUNGLE_MOD
+DESERT_MOD = 5  # // DESERT_MOD
+JUNGLE_MOD = 2  # * JUNGLE_MOD
 MOUNTAIN_MOD = 1.5  # // MOUNTAIN_MOD
-SWAMP_MOD = 2       # * SWAMP_MOD
+SWAMP_MOD = 2  # * SWAMP_MOD
 
 # precip_chance temp_zone variables
-ZONE_1_MOD = 1.25   # // ZONE_MOD
-ZONE_5_MOD = 1.25   # // ZONE_MOD
-ZONE_3_MOD = 1.5    # * ZONE_MOD
+ZONE_1_MOD = 1.25  # // ZONE_MOD
+ZONE_5_MOD = 1.25  # // ZONE_MOD
+ZONE_3_MOD = 1.5  # * ZONE_MOD
 
 # severity temp_zone variables
 ZONE_3_SEVERITY_MOD = 25
 ZONE_1_5_SEVERITY_MOD = 15
 
 # weight variables
-WEIGHT_MULTIPLE_MOD = 10    # * WEIGHT_MULTIPLE_MOD
-WEIGHT_INVERSE = 6          # WEIGHT_INVERSE - SEVERITY
+WEIGHT_MULTIPLE_MOD = 10  # * WEIGHT_MULTIPLE_MOD
+WEIGHT_INVERSE = 6  # WEIGHT_INVERSE - SEVERITY
 
 
 class RegionalWeather:
@@ -73,6 +73,7 @@ class RegionalWeather:
                 1 - season
                 2 - temp_zone
                 3 - biome"""
+        logging.debug("Calculating weather")
         self.day_num = day_num
         self.season_num = season_num
         self.country_id = country_id
@@ -82,15 +83,20 @@ class RegionalWeather:
         self.world_config = master_config.world_config_master
         self.percentile = PercentileCheck()
 
-        self.seasons = ("spring", "summer", "fall", "winter") #could maybe get this from an arg package
+        self.seasons = (
+            "spring",
+            "summer",
+            "fall",
+            "winter",
+        )  # could maybe get this from an arg package
         self.season = self.seasons[self.season_num]
         self.region_pack = []
         self._get_region_info()
         self.temp_zone = self._get_temp_zone()
-        self.precip_event = False # this should just be here to initialize this variable
-
+        self.precip_event = (
+            False  # this should just be here to initialize this variable
+        )
         self.precip_chance = BASE_PRECIP_CHANCE
-
         self.weather_pack = []
         # contains: [day_num, region_id, region biome, precipitation, severity, duration, weight, precip_event]
         self._weather()
@@ -110,10 +116,10 @@ class RegionalWeather:
         [self.region_pack.append(x) for x in test_pack if x not in self.region_pack]
 
     def _weather(self):
-        """ weather first pulls a bool from calc_precipitation
-            and if True, determines the severity, duration, and weight (impact)
-            of the precipitation within each region, appending the weather_pack
-            with the relevant information
+        """weather first pulls a bool from calc_precipitation
+        and if True, determines the severity, duration, and weight (impact)
+        of the precipitation within each region, appending the weather_pack
+        with the relevant information
         """
         for id, num in enumerate(self.region_pack):
             precipitation = self.calc_precipitation(
@@ -131,7 +137,9 @@ class RegionalWeather:
                 duration = self.calc_duration(
                     severity
                 )  # duration baseline is 1, higher severity can be longer
-                weight = self.calc_weight(severity)  # returns a weight (impact) score (0 - 100)
+                weight = self.calc_weight(
+                    severity
+                )  # returns a weight (impact) score (0 - 100)
             self.weather_pack.append(
                 (
                     self.day_num,
@@ -147,16 +155,17 @@ class RegionalWeather:
             )
 
     def calc_precipitation(self, id):
-        """ this function takes the base precipitation chance from
-            a constant variable, and then adjusts it through 3
-            different modifiers:
-                - seasonal changes
-                - biome dependant changes
-                - temp_zone changes
-            it then takes the final resulting precip_chance and uses it
-            as the threshhold for a precip_event, returning true if
-            a generated number is below the precip_chance.
+        """this function takes the base precipitation chance from
+        a constant variable, and then adjusts it through 3
+        different modifiers:
+            - seasonal changes
+            - biome dependant changes
+            - temp_zone changes
+        it then takes the final resulting precip_chance and uses it
+        as the threshhold for a precip_event, returning true if
+        a generated number is below the precip_chance.
         """
+
         def seasonal_changes():
             if self.season == "summer":
                 self.precip_chance = SUMMER_BASE
@@ -252,8 +261,8 @@ class RegionalWeather:
             astral_event = None
             natural_event = None
 
-            insert_regional_weather = (f
-                    """INSERT INTO regional_weather (
+            insert_regional_weather = f"""
+                    INSERT INTO regional_weather (
                         day_num, season, region_id, biome_name, precipitation,
                         severity, duration, weight, precip_event
                         )
@@ -262,8 +271,9 @@ class RegionalWeather:
                         {severity}, {duration}, {weight}, {precip_event}
                         )
                     """
-            insert_master_timeline = (f
-                    """INSERT INTO master_timeline (
+
+            insert_master_timeline = f"""
+                    INSERT INTO master_timeline (
                         day_num, season, region_id, biome_name,
                         precip_event, astral_event, natural_event
                         )

@@ -7,7 +7,7 @@
 
 
 # BUILT INS
-import math, random
+import random
 from operator import itemgetter
 
 # THIRD PARTY
@@ -131,8 +131,8 @@ class LocationAssembler:
         n = 9
         random.shuffle(self.indv_biomes)
         for i in range(0, len(self.indv_biomes), n):
+            yield self.indv_biomes[i : i + n]  # noqa: E203
             #            print('indv_bioms, (?)', self.indv_biomes)
-            yield self.indv_biomes[i : i + n]
 
     def _cell_coords(self):
         for id in enumerate(self.indv_biomes):

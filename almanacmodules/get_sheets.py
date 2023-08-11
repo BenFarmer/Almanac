@@ -10,14 +10,10 @@
 
 
 # BUILT IN
-import os.path
+import logging
 
 # THIRD-PARTY
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 # PERSONAL
 from almanacmodules import cred_check
@@ -68,14 +64,16 @@ class MasterConfig:
         MasterConfig.astral_config_master = astral_config
         MasterConfig.natural_config_master = natural_config
         MasterConfig.effects_config_master = effects_config
+        logging.info("[bold red]Master Configs appended")
 
 
 class SheetConversion:
-    """ This important class takes the raw information from the supplied
-        google sheet ranges and fills them into their according pydantic
-        models. That data is then picked up by the Master Config class
-        and returned in that final form.
+    """This important class takes the raw information from the supplied
+    google sheet ranges and fills them into their according pydantic
+    models. That data is then picked up by the Master Config class
+    and returned in that final form.
     """
+
     def __init__(self):
         self.raw_data = self.sheet_api(
             cred_check.confirmation()

@@ -1,9 +1,8 @@
 #!/bin/env python
 
+import logging
 from almanacmodules.astral import AstralInfo  # astral class in astral.py
 from almanacmodules.tests.test_feed_data import astral
-
-import pytest
 
 
 class TestAstral:
@@ -23,4 +22,4 @@ class TestAstral:
             print("\ntest number:", test_num, test_output)
 
     def test_get_astral(self):
-        run_times = 100
+        logging.debug(astral)

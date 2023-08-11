@@ -42,12 +42,13 @@ SEVERITY = 2
 
 
 class LikelyEvent:
-    """ this takes the precipitation score of each region and decides whether or not
-        precipitation occurs in that region. If precipitation does occur, then this
-        updates both regional_weather and master_timeline tables with that information.
-        This needs to then:
-            - communicate with prereqs module to see if precipitation causes any events
+    """this takes the precipitation score of each region and decides whether or not
+    precipitation occurs in that region. If precipitation does occur, then this
+    updates both regional_weather and master_timeline tables with that information.
+    This needs to then:
+        - communicate with prereqs module to see if precipitation causes any events
     """
+
     def __init__(self, day_num, season, country_id):
         self.day_num = day_num
         self.season = season
@@ -73,7 +74,9 @@ class LikelyEvent:
             )
         self._likely_event_logic(past_weather)
 
-    def _likely_event_logic(self, past_weather): # this should probably be renamed to something like 'update precip'
+    def _likely_event_logic(
+        self, past_weather
+    ):  # this should probably be renamed to something like 'update precip'
         region_index = past_weather[-1][
             REGION_ID
         ]  # returns the largest region_id which is also the number of regions
@@ -128,7 +131,13 @@ class RandomEvent:
             astral_name = self.event_details[0][1]
             astral_type = self.event_details[0][2]
             event_description = self.event_details[0][3]
-            input_astral = f"INSERT INTO astral_events (day_num, season, astral_name, astral_type, event_description) VALUES ({self.day_num}, '{self.season}', '{astral_name}', '{astral_type}', '{event_description}')"
+            input_astral = f"""
+                INSERT INTO astral_events
+                    (day_num, season, astral_name, astral_type, event_description)
+                VALUES
+                    ({self.day_num}, '{self.season}', '{astral_name}',
+                    '{astral_type}', '{event_description}')
+                """
             self.cursor.execute(input_astral)
             c.commit()
             # [(61, 'Helene', 'moon', 'has eclipsed the sun,')]
@@ -155,7 +164,13 @@ class RandomEvent:
                 event_name = event[2]
                 severity = event[3]
                 event_description = event[4]
-                input_natural = f"INSERT INTO natural_events (day_num, season, region_id, biome_name, event_name, severity, event_description) VALUES ({self.day_num}, '{self.season}', {region_id}, '{biome_name}', '{event_name}',{severity}, '{event_description}')"
+                input_natural = f"""
+                    INSERT INTO natural_events
+                        (day_num, season, region_id, biome_name, event_name, severity, event_description)
+                    VALUES
+                        ({self.day_num}, '{self.season}', {region_id}, '{biome_name}',
+                        '{event_name}',{severity}, '{event_description}')
+                    """
                 self.cursor.execute(input_natural)
                 c.commit()
 
@@ -169,7 +184,8 @@ class EventCoordinator:
         1 - reference SQLite reader and a prerequisites module to determine if there are any
             events (large/major/global or small/minor/local) that *should* happen.
         2 - determine if an event tries happens randomly, then gather the details of that event
-            from whatever module is necessary, then send that information into the correct table."""
+            from whatever module is necessary, then send that information into the correct table.
+        """
         self.day_num = day_num
         self.country_id = country_id
         self.season_id = season_id

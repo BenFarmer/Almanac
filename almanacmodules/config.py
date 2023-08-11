@@ -6,21 +6,9 @@
 """
 
 # BUILT INS
-import re
 
 # THIRD PARTY
 from pydantic import BaseModel
-from pydantic import ValidationError
-from pydantic import validator
-
-#       RE USED VALIDATOR FUNCTIONS
-
-# def must_be_a_num(cls, v):
-#    if v != int:
-#        raise ValueError('must be a number')
-#     return v
-
-# def must_not_contain_num(cls, v):   # need to finish building this to reuse
 
 # class biome(BaseModel):
 #    forest: int
