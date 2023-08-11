@@ -1,8 +1,10 @@
 #!/bin/env python
 
+# BUILT INS
+import logging
+
 # THIRD PARTY
 import sqlite3
-from pydantic import BaseModel
 
 c = sqlite3.connect(r"/home/ben/Envs/databases/sqlite/Almanac.db")
 
@@ -24,6 +26,7 @@ class MasterTimer:
     For example, when as astral event causes a monstrous effect, this controls the
     timing for how long that effect lasts for.
     """
+
     def __init__(self):
         self.cursor = c.cursor()
         self.astral_events = []
@@ -31,7 +34,7 @@ class MasterTimer:
 
     def update(self):
         def fetch_astral():
-            fetch_astral_events = f"SELECT * FROM astral_events;"
+            fetch_astral_events = "SELECT * FROM astral_events;"
             self.cursor.execute(fetch_astral_events)
             rows = self.cursor.fetchall()
             for row in rows:
@@ -44,9 +47,15 @@ class MasterTimer:
                         row[ASTRAL_DESCRIPTION],
                     )
                 )
+            logging.debug(
+                f"""
+                [bold red]Astral Events PRE-VALIDATION:[/]
+                DAY NUM 0, SEASON 1, ASTRAL NAME 2, ASTRAL TYPE 3, ASTRAL DESCRIPTION 4
+                {self.astral_events}"""
+            )
 
         def fetch_natural():
-            fetch_natural_events = f"SELECT * FROM natural_events;"
+            fetch_natural_events = "SELECT * FROM natural_events;"
             self.cursor.execute(fetch_natural_events)
             rows = self.cursor.fetchall()
             for row in rows:
@@ -60,32 +69,35 @@ class MasterTimer:
                         row[NATURAL_DESCRIPTION],
                     )
                 )
+            logging.debug(
+                f"""
+                [bold red] Natural Events PRE-VALIDATION:[/]
+                DAY NUM 0, SEASON 1, REGION_ID 2, BIOME_NAME 3, EVENT_NAME 4, NATURAL_DESCRIPTION 5
+                {self.natural_events}"""
+            )
 
         fetch_astral()
         fetch_natural()
         self._finalize_events()
 
-    def _finalize_events(self): # should consider renaming to 'validate_events'
-        """ finalize_events takes the events that are attempting to happen
-            and double checks their conditions against the event_prereqs models.
-            if they pass this testing, they are pushed into the master_timeline.
+    def _finalize_events(self):  # should consider renaming to 'validate_events'
+        """finalize_events takes the events that are attempting to happen
+        and double checks their conditions against the event_prereqs models.
+        if they pass this testing, they are pushed into the master_timeline.
         """
+
         def verify_astral():
-            place_holder = True
+            logging.info("verifying_astral")
 
         def verify_natural():
             for event in self.natural_events:
                 if event[5] == "None":
-                    print(
-                        "this needs to double check that the event description exists just in case -- MasterTimer"
-                    )
+                    logging.warning("event description seems to be missing here")
                 else:
-                    print(
-                        "then if everything is ready, checks against params for if event makes sense -- MasterTimer"
-                    )
+                    logging.info("start validation of events against event_prereqs")
 
         def event_duration():
-            placeholder = False
+            logging.info("verifying_astral")
 
         verify_astral()
         verify_natural()

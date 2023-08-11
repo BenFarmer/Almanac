@@ -2,9 +2,6 @@
 
 from almanacmodules.natural import NaturalInfo
 from almanacmodules.tests.feed_data import test_worlds, test_naturals
-import pytest
-
-# need to optimize natural.py then rewrite this test
 
 
 class TestNatural:

@@ -2,8 +2,6 @@
 
 from almanacmodules.weather import DailyWeather
 
-import pytest
-
 
 class TestWeather:
     def test_output(self):

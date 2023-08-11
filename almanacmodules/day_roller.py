@@ -10,13 +10,13 @@
 """
 
 # BUILT INS
-import math, random
+import logging
 
 # THIRD PARTY
 import sqlite3
 
 # PERSONAL
-from almanacmodules import cfg, caller
+from almanacmodules import cfg
 from almanacmodules.weather import RegionalWeather
 from almanacmodules.event_coordinator import EventCoordinator
 from almanacmodules.location_assembler import LocationAssembler
@@ -80,18 +80,17 @@ class DayRoller:
                             |-> LIKELY/RANDOM/ENDING EVENTS
         STEP 5 - SEND DAILY EVENT BUNDLE TO OUTPUT MANAGER
         """
+        logging.info("[bold red]day_index started")
         for self.day_num in range(cfg.max_day):  # daily index
             #            sqlite_control = SQLiteControl
             #            sqlite_control.create_connection
             #            print('sql connection')
 
             self._season_updater()
-
-            regional_weather = RegionalWeather(
+            RegionalWeather(
                 self.day_num, self.country_id, self.season_num, self.indv_biomes_config
             )  # determines regional weather and loads into SQLITE DB
-
-            event_coordinator = EventCoordinator(
+            EventCoordinator(
                 self.day_num, self.country_id, self.season, self.indv_biomes_config
             )
         # master timer is run outside of loop after it is completed
@@ -99,7 +98,6 @@ class DayRoller:
 
     def _create_sqlite_tables(self):
         c = sqlite3.connect(r"/home/ben/Envs/databases/sqlite/Almanac.db")
-        cursor = c.cursor()
         regional_weather = """CREATE TABLE IF NOT EXISTS regional_weather (day_num INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, precipitation BOOL NOT NULL, severity INTEGER NOT NULL, duration INTEGER NOT NULL, weight INTEGER NOT NULL, precip_event BOOL NOT NULL)"""
         natural_events = """CREATE TABLE IF NOT EXISTS natural_events (day_num INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, event_name STRING NOT NULL, severity INTEGER NOT NULL, event_description STRING NOT NULL)"""
         astral_events = """CREATE TABLE IF NOT EXISTS astral_events (day_num INTEGER NOT NULL, season STRING NOT NULL, astral_name STRING NOT NULL, astral_type STRING NOT NULL, event_description STRING NOT NULL)"""
@@ -109,25 +107,32 @@ class DayRoller:
         delete_old_natural_events = """DELETE FROM natural_events"""
         delete_old_astral_events = """DELETE FROM astral_events"""
 
-        cursor.execute(regional_weather)
-        cursor.execute(master_timeline)
-        cursor.execute(natural_events)
-        cursor.execute(astral_events)
-        cursor.execute(delete_old_regional_weather)
-        cursor.execute(delete_old_master_timeline)
-        cursor.execute(delete_old_natural_events)
-        cursor.execute(delete_old_astral_events)
-        c.commit()
+        try:
+            cursor = c.cursor()
+            cursor.execute(regional_weather)
+            cursor.execute(master_timeline)
+            cursor.execute(natural_events)
+            cursor.execute(astral_events)
+            cursor.execute(delete_old_regional_weather)
+            cursor.execute(delete_old_master_timeline)
+            cursor.execute(delete_old_natural_events)
+            cursor.execute(delete_old_astral_events)
+            logging.info("[bold red]sqlite tables created")
+        except ConnectionError as e:
+            logging.critical(e)
+        finally:
+            c.commit()
 
     def _season_updater(self):  # called from day_index
         #        get_array = caller.GetArray()
         #        self.season = get_array.get_seasons(self.season_num)
         self.season = self.seasons[self.season_num]
         if (self.day_num / self.season_length) in [1, 2, 3, 4]:
-            if self.season_num == 3:
-                self.season_num = self.season_num
-            else:
+            if self.season_num != 3:
                 self.season_num += 1
+                logging.debug(f"[bold red]season updated to:[/] {self.season}")
+            else:
+                logging.debug(f"[bold red]season updated to:[/] {self.season}")
 
     def _get_country_id(self):  # called from __init__
         for row, name in enumerate(self.world_config):
@@ -139,4 +144,6 @@ class DayRoller:
         """year_div returns the month_length and season_length in days"""
         month_length = round(cfg.max_day / MONTHS_IN_YEAR)
         season_length = month_length * MONTHS_IN_SEASON
+        logging.info(f"[bold red]Month Length:[/] {month_length}")
+        logging.info(f"[bold red]season Length:[/] {season_length}")
         return month_length, season_length
