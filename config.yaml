@@ -1,0 +1,18 @@
+#cur_time
+season_num_start: 0
+
+# year_info
+year_num: 1325
+seasons: ["spring", "summer", "fall", "winter"]
+months_in_year: 12
+max_day: 366
+season_length: 3
+month_length: 30 #could maybe be calculated
+start_day: 1
+
+# event constants
+rand_event_chance: 10
+event_names: ["astral", "natural"]
+
+# weather constants
+base_precip_chance: 0

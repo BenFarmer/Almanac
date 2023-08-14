@@ -30,12 +30,12 @@ class IndvBiome(BaseModel):
 
 
 class LocationAssembler:
-    def __init__(self, country_id):
+    def __init__(self, location_id):
         master_config = MasterConfig
         self.world_config = master_config.world_config_master
         self.biome_config = master_config.biome_config_master
 
-        self.country_id = country_id
+        self.location_id = location_id
         self.indv_biomes = []
         self.biomes = {
             "forest",
@@ -70,7 +70,7 @@ class LocationAssembler:
     #        print('cells', self.cells)
 
     def _biome_assigner(self):
-        biome_score = self.world_config[self.country_id].dict(include=self.biomes)
+        biome_score = self.world_config[self.location_id].dict(include=self.biomes)
         initial_buckets = biome_score.values()
         #        print('inital_buckets of 100', initial_buckets)
         buckets = []

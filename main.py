@@ -33,8 +33,7 @@
 # BUILT-INS
 import argparse
 import logging
-
-# import yaml  # need to implement
+import yaml
 
 # THIRD PARTY
 from rich import print as rprint
@@ -49,12 +48,12 @@ from almanacmodules.day_roller import DayRoller
 
 
 def main():
-    input_country = get_args()  # this will eventually be replaced with an arg_dict
+    args, time = get_args()
     master_config = get_config()
-    country_validator(input_country, master_config)
+    country_validator(args, time, master_config)
 
 
-def country_validator(input_country, master_config):
+def country_validator(args, time, master_config):
     """validates that the input country exists within the
     master_config and if it fails, re-runs the validator
     with a new input country.
@@ -64,21 +63,25 @@ def country_validator(input_country, master_config):
         if row.name not in accepted_countries:
             accepted_countries.append(row.name)
 
-    if input_country in accepted_countries:
-        logging.info(f"[bold red]input_country validated: {input_country}")
-        start_day_index(input_country)
+    if args["location_info"]["location_name"] in accepted_countries:
+        logging.info(
+            f"[bold red]input_country validated: {args['location_info']['location_name']}"
+        )
+        start_day_index(args, time)
     else:
         rprint("[red]This country doesn't exist in my library of accepted countries")
         if input("Would you like to try again? y/n: ") == "y":
-            input_country = input("Please input the country name again: ")
-            country_validator(input_country, master_config)
+            args["location_info"]["location_name"] = input(
+                "Please input the country name again: "
+            )
+            country_validator(args, time, master_config)
 
 
-def start_day_index(input_country):
+def start_day_index(args, time):
     """this starts the yearly run of Almanac and is called only after
     the input country is properly validated against the master_config
     """
-    day_roller = DayRoller(input_country)
+    day_roller = DayRoller(args, time)
     day_roller.day_index()
 
 
@@ -114,6 +117,50 @@ def get_args():
     that can be referenced through Almanac when needed.
     get_args also sets the logging level of Almanac.
     """
+
+    def get_yaml():
+        with open("config.yaml") as stream:
+            try:
+                yaml_config = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                logging.critical(exc)
+            finally:
+                return yaml_config
+
+    def build_arg_dict(input_country, yaml_config):
+        arg_dict = {
+            "location_info": {
+                "location_name": input_country,
+                "location_id": None,
+                "temp_zone": None,
+            },
+            "year_info": {
+                "seasons": yaml_config["seasons"],
+                "start_day": yaml_config["start_day"],
+                "max_day": yaml_config["max_day"],
+                "months_in_year": yaml_config["months_in_year"],
+                "season_length": yaml_config["season_length"],
+                "month_length": yaml_config["month_length"],
+            },
+            "event": {
+                "rand_event_chance": yaml_config["rand_event_chance"],
+                "event_names": yaml_config["event_names"],
+            },
+            "weather_constants": {
+                "base_precip_chance": yaml_config["base_precip_chance"],
+            },
+        }
+        return arg_dict
+
+    def build_time_dict(yaml_config):
+        num = yaml_config["season_num_start"]
+        time = {
+            "day_num": yaml_config["start_day"],
+            "season_num": yaml_config["season_num_start"],
+            "season_name": yaml_config["seasons"][num],
+        }
+        return time
+
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-i",
@@ -143,7 +190,11 @@ def get_args():
         logging.info("[bold red] Resetting logs")
         LogReset()
 
-    return args.input_country  # this will eventually return an arg_dict
+    yaml_config = get_yaml()
+    arg_dict = build_arg_dict(args.input_country, yaml_config)
+    time_dict = build_time_dict(yaml_config)
+    logging.info(f"[bold red]arg_dict:[/] {arg_dict}")
+    return arg_dict, time_dict
 
 
 def setup_logging(logging_level):
