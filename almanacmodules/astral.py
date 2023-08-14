@@ -5,14 +5,11 @@
 
 # BUILT INS
 import random
+import logging
 
 # THIRD PARTY
 
 # PERSONAL
-from almanacmodules import cfg  # initial config that I'm moving away from for most info
-from almanacmodules import (
-    caller,
-)  # works in conjunction with cfg to return items from lists
 from almanacmodules.get_sheets import (
     MasterConfig,
 )  # usable google sheets in pydantic form
@@ -42,17 +39,17 @@ class AstralInfo:
         self.event_details = []
 
     def get_astral(self):
-        get_array = caller.GetArray()
         self.astral_id = random.randint(0, len(list(self.astral_config)) - 1)
 
         for row in self.astral_config:
             if row.id == self.astral_id:
                 self.astral_type = row.type
                 self.astral_name = row.name
-
-        self.p_event_pick = get_array.get_events(
-            random.randint(0, (len(cfg.planet_events) - 1))
-        )
+        self.p_event_pick = None
+        logging.info(f"astral movements need to be moved onto the sheets")
+#        self.p_event_pick = get_array.get_events(
+#            random.randint(0, (len(cfg.planet_events) - 1))
+#        )
 
         self.event_details.append(
             (self.astral_id, self.astral_name, self.astral_type, self.p_event_pick)

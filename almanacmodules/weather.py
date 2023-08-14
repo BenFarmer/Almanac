@@ -26,6 +26,7 @@ from almanacmodules.get_sheets import MasterConfig
 
 
 # these weather configs should potentially be put into a weather cfg
+# or into the args dict as a weather sub dict
 # REGIONAL WEATHER CONSTANTS
 BASE_PRECIP_CHANCE = 0
 
@@ -59,7 +60,7 @@ WEIGHT_INVERSE = 6  # WEIGHT_INVERSE - SEVERITY
 
 
 class RegionalWeather:
-    def __init__(self, day_num, country_id, season_num, indv_biomes_config):
+    def __init__(self, args, time, indv_biomes_config):
         """DailyWeather takes the indv biomes built by location assembler and determines
         a local weather event for each group/region.
         This weather event is based on several factors:
@@ -73,26 +74,17 @@ class RegionalWeather:
                 1 - season
                 2 - temp_zone
                 3 - biome"""
-        logging.debug("Calculating weather")
-        self.day_num = day_num
-        self.season_num = season_num
-        self.country_id = country_id
+        self.args = args
+        self.time = time
         self.indv_biomes_config = indv_biomes_config
 
         master_config = MasterConfig
         self.world_config = master_config.world_config_master
         self.percentile = PercentileCheck()
 
-        self.seasons = (
-            "spring",
-            "summer",
-            "fall",
-            "winter",
-        )  # could maybe get this from an arg package
-        self.season = self.seasons[self.season_num]
+        self._get_temp_zone()  # should be moved into arg builder
         self.region_pack = []
-        self._get_region_info()
-        self.temp_zone = self._get_temp_zone()
+        self._get_region_info()  # should be moved into arg buider
         self.precip_event = (
             False  # this should just be here to initialize this variable
         )
@@ -102,10 +94,10 @@ class RegionalWeather:
         self._weather()
         self._sqlite()
 
-    def _get_temp_zone(self):
+    def _get_temp_zone(self):  # should bemoved into arg_builder module
         for country in self.world_config:
-            if country.id == self.country_id:
-                return country.temp_zone
+            if country.id == self.args["location_info"]["location_id"]:
+                self.args["location_info"]["temp_zone"] = country.temp_zone
 
     def _get_region_info(self):
         # builds a initial pack with region id, then removes duplicates and appends into region pack
@@ -142,8 +134,8 @@ class RegionalWeather:
                 )  # returns a weight (impact) score (0 - 100)
             self.weather_pack.append(
                 (
-                    self.day_num,
-                    self.season,
+                    self.time["day_num"],
+                    self.time["season_name"],
                     self.region_pack[id][REGION_ID],
                     self.region_pack[id][BIOME_NAME],
                     precipitation,
@@ -167,11 +159,12 @@ class RegionalWeather:
         """
 
         def seasonal_changes():
-            if self.season == "summer":
+            season_name = self.time["season_name"]
+            if season_name == "summer":
                 self.precip_chance = SUMMER_BASE
-            elif self.season == "winter":
+            elif season_name == "winter":
                 self.precip_chance = WINTER_BASE
-            elif self.season == "spring":
+            elif season_name == "spring":
                 self.precip_chance = SPRING_BASE
             else:
                 self.precip_chance = FALL_BASE
@@ -193,7 +186,7 @@ class RegionalWeather:
                 self.precip_chance = mod
 
         def temp_changes():
-            temp_zone = self.world_config[self.country_id].temp_zone
+            temp_zone = self.args["location_info"]["temp_zone"]
             if temp_zone == 1:
                 mod = self.precip_chance // ZONE_1_MOD
                 self.precip_chance = mod
@@ -214,7 +207,7 @@ class RegionalWeather:
             return False
 
     def calc_severity(self):
-        temp_zone = self.world_config[self.country_id].temp_zone
+        temp_zone = self.args["location_info"]["temp_zone"]
         severity = self.percentile.norm_rarity()
         if severity == 1:
             return severity

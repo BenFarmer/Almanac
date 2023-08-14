@@ -13,7 +13,6 @@ import random
 import sqlite3
 
 # PERSONAL
-from almanacmodules import cfg
 from almanacmodules.astral import AstralInfo
 from almanacmodules.natural import NaturalInfo
 
@@ -49,15 +48,23 @@ class LikelyEvent:
         - communicate with prereqs module to see if precipitation causes any events
     """
 
-    def __init__(self, day_num, season, country_id):
-        self.day_num = day_num
-        self.season = season
-        self.country_id = country_id
+    def __init__(self, args, time):
+        self.args = args
+        self.time = time
+
+        self.day_num = self.time["day_num"]
+        self.season_name = self.time["season_name"]
+        self.location_id = self.args["location_info"]["location_id"]
         self.past_date = self.day_num - DAYS_PAST
         self.cursor = c.cursor()
 
     def read_weather(self):
-        fetch_past_weather = f"SELECT * FROM regional_weather WHERE day_num <= {self.day_num} and day_num >= {self.past_date}"
+        fetch_past_weather = f"""
+            SELECT *
+            FROM regional_weather
+            WHERE day_num <= {self.day_num}
+                and
+                day_num >= {self.past_date}"""
 
         self.cursor.execute(fetch_past_weather)
         rows = self.cursor.fetchall()
@@ -72,9 +79,9 @@ class LikelyEvent:
                     row[WEIGHT],
                 )
             )
-        self._likely_event_logic(past_weather)
+        self._update_precip(past_weather)
 
-    def _likely_event_logic(
+    def _update_precip(
         self, past_weather
     ):  # this should probably be renamed to something like 'update precip'
         region_index = past_weather[-1][
@@ -104,27 +111,25 @@ class LikelyEvent:
 
 
 class RandomEvent:
-    def __init__(self, day_num, season, country_id, indv_biomes_config):
+    def __init__(self, args, time, indv_biomes_config):
         """LargeEvent handles the decisions needed to piece together a large scale event.
         These events generally have country-wide implications, but also can have small
         scale effects as well."""
-        self.day_num = day_num
-        self.season = season
-        self.country_id = country_id
+        self.args = args
+        self.time = time
+
+        self.day_num = self.time["day_num"]
+        self.season_name = self.time["season_name"]
+        self.location_id = self.args["location_info"]["location_id"]
         self.indv_biomes_config = indv_biomes_config
         self.event_details = None
         self.cursor = c.cursor()
 
     def event(self):
-        random_events = (
-            "astral",
-            "natural",
-        )
+        pick = random.randint(0, len(self.args["event"]["event_names"]) - 1)
+        event_type = self.args["event"]["event_names"][pick]
 
-        pick = random.randint(0, len(random_events) - 1)
-        self.event_type = random_events[pick]
-
-        if self.event_type == "astral":
+        if event_type == "astral":
             astral_info = AstralInfo()
             self.event_details = astral_info.get_astral()
 
@@ -135,15 +140,15 @@ class RandomEvent:
                 INSERT INTO astral_events
                     (day_num, season, astral_name, astral_type, event_description)
                 VALUES
-                    ({self.day_num}, '{self.season}', '{astral_name}',
+                    ({self.day_num}, '{self.season_name}', '{astral_name}',
                     '{astral_type}', '{event_description}')
                 """
             self.cursor.execute(input_astral)
             c.commit()
             # [(61, 'Helene', 'moon', 'has eclipsed the sun,')]
 
-        elif self.event_type == "natural":
-            natural_info = NaturalInfo(self.country_id)
+        elif event_type == "natural":
+            natural_info = NaturalInfo(self.args["location_info"]["location_id"])
             natural_info.load_config()
             self.event_details = natural_info.decide_natural(self.indv_biomes_config)
             events = []
@@ -168,7 +173,7 @@ class RandomEvent:
                     INSERT INTO natural_events
                         (day_num, season, region_id, biome_name, event_name, severity, event_description)
                     VALUES
-                        ({self.day_num}, '{self.season}', {region_id}, '{biome_name}',
+                        ({self.day_num}, '{self.season_name}', {region_id}, '{biome_name}',
                         '{event_name}',{severity}, '{event_description}')
                     """
                 self.cursor.execute(input_natural)
@@ -179,31 +184,30 @@ class RandomEvent:
 
 
 class EventCoordinator:
-    def __init__(self, day_num, country_id, season_id, indv_biomes_config):
+    def __init__(self, args, time, indv_biomes_config):
         """EventCoordinator has a few important responsibilities.
         1 - reference SQLite reader and a prerequisites module to determine if there are any
             events (large/major/global or small/minor/local) that *should* happen.
         2 - determine if an event tries happens randomly, then gather the details of that event
             from whatever module is necessary, then send that information into the correct table.
         """
-        self.day_num = day_num
-        self.country_id = country_id
-        self.season_id = season_id
+        self.args = args
+        self.time = time
+
+        self.day_num = self.time["day_num"]
+        self.location_id = self.args["location_info"]["location_id"]
+        self.season_num = self.time["season_num"]
         self.indv_biomes_config = indv_biomes_config
 
         self.cursor = c.cursor()
         self._event_determiner()
 
     def _event_determiner(self):
-        likely_event = LikelyEvent(self.day_num, self.season_id, self.country_id)
-        random_event = RandomEvent(
-            self.day_num, self.season_id, self.country_id, self.indv_biomes_config
-        )
+        likely_event = LikelyEvent(self.args, self.time)
+        random_event = RandomEvent(self.args, self.time, self.indv_biomes_config)
 
         def _random_check():
-            if random.randint(0, 100) > cfg.random_event_chance:
-                self.random_event = None
-            else:
+            if random.randint(0, 100) < self.args["event"]["rand_event_chance"]:
                 random_event.event()
 
         likely_event.read_weather()
