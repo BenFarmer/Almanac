@@ -60,7 +60,7 @@ WEIGHT_INVERSE = 6  # WEIGHT_INVERSE - SEVERITY
 
 
 class RegionalWeather:
-    def __init__(self, args, time, indv_biomes_config):
+    def __init__(self, args, time, indv_biomes_config, conn):
         """DailyWeather takes the indv biomes built by location assembler and determines
         a local weather event for each group/region.
         This weather event is based on several factors:
@@ -77,6 +77,7 @@ class RegionalWeather:
         self.args = args
         self.time = time
         self.indv_biomes_config = indv_biomes_config
+        self.conn = conn
 
         master_config = MasterConfig
         self.world_config = master_config.world_config_master
@@ -237,8 +238,7 @@ class RegionalWeather:
         return weight
 
     def _sqlite(self):
-        conn = sqlite3.connect(r"/home/ben/Envs/databases/sqlite/Almanac.db")
-        cursor = conn.cursor()
+        cursor = self.conn.cursor()
 
         for item in self.weather_pack:
             day_num = item[0]
@@ -278,4 +278,4 @@ class RegionalWeather:
 
             cursor.execute(insert_regional_weather)
             cursor.execute(insert_master_timeline)
-        conn.commit()
+        self.conn.commit()

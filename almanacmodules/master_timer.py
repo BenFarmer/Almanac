@@ -4,9 +4,6 @@
 import logging
 
 # THIRD PARTY
-import sqlite3
-
-c = sqlite3.connect(r"/home/ben/Envs/databases/sqlite/Almanac.db")
 
 # CONSTANTS
 DAY_NUM = 0
@@ -27,8 +24,9 @@ class MasterTimer:
     timing for how long that effect lasts for.
     """
 
-    def __init__(self):
-        self.cursor = c.cursor()
+    def __init__(self, conn):
+        self.conn = conn
+        self.cursor = conn.cursor()
         self.astral_events = []
         self.natural_events = []
 

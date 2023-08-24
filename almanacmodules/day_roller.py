@@ -24,7 +24,7 @@ from almanacmodules.get_sheets import MasterConfig
 
 
 class DayRoller:
-    def __init__(self, args, time):
+    def __init__(self, args, time, conn):
         """DayRoller's job is to index through each day in the year for each of the 100
             biomes within a selected country (country_select).
         DayRoller does not output anything directly to a log.
@@ -36,6 +36,7 @@ class DayRoller:
             day_num, the season_num(and season_name)."""
         self.args = args
         self.time = time
+        self.conn = conn
 
         master_config = MasterConfig
         self.world_config = master_config.world_config_master
@@ -48,7 +49,7 @@ class DayRoller:
             self.args["location_info"]["location_id"]
         )
         self.indv_biomes_config = location_assembler.indv_model_maker()
-        self.master_timer = MasterTimer()  # start the master_timer
+        self.master_timer = MasterTimer(conn)  # start the master_timer
 
     def day_index(self):
         """indexes through each day, calling the daily_biome_index, and a decider type
@@ -74,14 +75,13 @@ class DayRoller:
 
             self._season_updater()
             RegionalWeather(
-                self.args, self.time, self.indv_biomes_config
+                self.args, self.time, self.indv_biomes_config, self.conn
             )  # determines regional weather and loads into SQLITE DB
-            EventCoordinator(self.args, self.time, self.indv_biomes_config)
+            EventCoordinator(self.args, self.time, self.indv_biomes_config, self.conn)
         # master timer is run outside of loop after it is completed
         self.master_timer.update()
 
     def _create_sqlite_tables(self):
-        c = sqlite3.connect(r"/home/ben/Envs/databases/sqlite/Almanac.db")
         regional_weather = """CREATE TABLE IF NOT EXISTS regional_weather (day_num INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, precipitation BOOL NOT NULL, severity INTEGER NOT NULL, duration INTEGER NOT NULL, weight INTEGER NOT NULL, precip_event BOOL NOT NULL)"""
         natural_events = """CREATE TABLE IF NOT EXISTS natural_events (day_num INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, event_name STRING NOT NULL, severity INTEGER NOT NULL, event_description STRING NOT NULL)"""
         astral_events = """CREATE TABLE IF NOT EXISTS astral_events (day_num INTEGER NOT NULL, season STRING NOT NULL, astral_name STRING NOT NULL, astral_type STRING NOT NULL, event_description STRING NOT NULL)"""
@@ -92,7 +92,7 @@ class DayRoller:
         delete_old_astral_events = """DELETE FROM astral_events"""
 
         try:
-            cursor = c.cursor()
+            cursor = self.conn.cursor()
             cursor.execute(regional_weather)
             cursor.execute(master_timeline)
             cursor.execute(natural_events)
@@ -105,7 +105,7 @@ class DayRoller:
         except ConnectionError as e:
             logging.critical(e)
         finally:
-            c.commit()
+            self.conn.commit()
 
     def _season_updater(self):  # called from day_index
         #        get_array = caller.GetArray()
