@@ -23,10 +23,11 @@ class GetArguments:
         self.arg_dict = self._build_arg_dict()
         self.time_dict = self._build_time_dict()
 
-        self._setup_logging()
+#        self._setup_logging()
 
 
     def _parsed_arguments(self):
+        # REQUIRED ARGUMENTS
         self.parser.add_argument(
             "-i",
             "--input_location",
@@ -34,6 +35,7 @@ class GetArguments:
             help="name of a recognized location that Almanac will produce a timeline for",
         )
 
+        # OPTIONAL ARGUMENTS
         self.parser.add_argument(
             "-d",
             "--delete_logs",
@@ -47,6 +49,14 @@ class GetArguments:
             choices=["debug", "info", "warning", "error", "critical"],
             help="sets the logging level of Almanac",
         )
+
+        self.parser.add_argument(
+            "-r",
+            "--report",
+            choices=['y','n'],
+            help="option to run reporting on currenct Almanac run",
+        )
+
         self.args = self.parser.parse_args()
 
         if self.args.delete_logs == "y":
@@ -89,6 +99,8 @@ class GetArguments:
             "weather_constants": {
                 "base_precip_chance": self.yaml_config["base_precip_chance"],
             },
+            "log_level": self.args.logging_level,
+            "report": self.args.report,
         }
         return arg_dict
 
@@ -102,7 +114,6 @@ class GetArguments:
 
     def _setup_logging(self):
         log_level = str(self.args.logging_level).upper()
-        print(log_level)
         rprint(f"[bold red blink]Current Log Level: {log_level}")
 
         FORMAT = "%(message)s"

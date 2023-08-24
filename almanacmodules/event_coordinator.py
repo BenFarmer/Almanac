@@ -16,8 +16,6 @@ import sqlite3
 from almanacmodules.astral import AstralInfo
 from almanacmodules.natural import NaturalInfo
 
-c = sqlite3.connect(r"/home/ben/Envs/databases/sqlite/Almanac.db")
-
 # LIKELY EVENT CONSTANTS
 DAYS_PAST = 7  # how many prior days are looked at for scoring
 REGION_ID = 2
@@ -48,15 +46,16 @@ class LikelyEvent:
         - communicate with prereqs module to see if precipitation causes any events
     """
 
-    def __init__(self, args, time):
+    def __init__(self, args, time, conn):
         self.args = args
         self.time = time
+        self.conn = conn
 
         self.day_num = self.time["day_num"]
         self.season_name = self.time["season_name"]
         self.location_id = self.args["location_info"]["location_id"]
         self.past_date = self.day_num - DAYS_PAST
-        self.cursor = c.cursor()
+        self.cursor = conn.cursor()
 
     def read_weather(self):
         fetch_past_weather = f"""
@@ -107,23 +106,24 @@ class LikelyEvent:
                 self.cursor.execute(
                     f"UPDATE master_timeline SET precip_event = 1 WHERE day_num = {self.day_num} AND region_id = {region[2]}"
                 )
-                c.commit()
+                self.conn.commit()
 
 
 class RandomEvent:
-    def __init__(self, args, time, indv_biomes_config):
+    def __init__(self, args, time, indv_biomes_config, conn):
         """LargeEvent handles the decisions needed to piece together a large scale event.
         These events generally have country-wide implications, but also can have small
         scale effects as well."""
         self.args = args
         self.time = time
+        self.conn = conn
 
         self.day_num = self.time["day_num"]
         self.season_name = self.time["season_name"]
         self.location_id = self.args["location_info"]["location_id"]
         self.indv_biomes_config = indv_biomes_config
         self.event_details = None
-        self.cursor = c.cursor()
+        self.cursor = conn.cursor()
 
     def event(self):
         pick = random.randint(0, len(self.args["event"]["event_names"]) - 1)
@@ -144,7 +144,7 @@ class RandomEvent:
                     '{astral_type}', '{event_description}')
                 """
             self.cursor.execute(input_astral)
-            c.commit()
+            self.conn.commit()
             # [(61, 'Helene', 'moon', 'has eclipsed the sun,')]
 
         elif event_type == "natural":
@@ -177,14 +177,14 @@ class RandomEvent:
                         '{event_name}',{severity}, '{event_description}')
                     """
                 self.cursor.execute(input_natural)
-                c.commit()
+                self.conn.commit()
 
             # [(IndvBiome(indv_id=56, biome_name='swamp', cell_position_x=2, cell_position_y=0,
             #    region_id=21), ('sinkhole', 'thunderstorm')]
 
 
 class EventCoordinator:
-    def __init__(self, args, time, indv_biomes_config):
+    def __init__(self, args, time, indv_biomes_config, conn):
         """EventCoordinator has a few important responsibilities.
         1 - reference SQLite reader and a prerequisites module to determine if there are any
             events (large/major/global or small/minor/local) that *should* happen.
@@ -193,18 +193,19 @@ class EventCoordinator:
         """
         self.args = args
         self.time = time
+        self.conn = conn
 
         self.day_num = self.time["day_num"]
         self.location_id = self.args["location_info"]["location_id"]
         self.season_num = self.time["season_num"]
         self.indv_biomes_config = indv_biomes_config
 
-        self.cursor = c.cursor()
+        self.cursor = conn.cursor()
         self._event_determiner()
 
     def _event_determiner(self):
-        likely_event = LikelyEvent(self.args, self.time)
-        random_event = RandomEvent(self.args, self.time, self.indv_biomes_config)
+        likely_event = LikelyEvent(self.args, self.time, self.conn)
+        random_event = RandomEvent(self.args, self.time, self.indv_biomes_config, self.conn)
 
         def _random_check():
             if random.randint(0, 100) < self.args["event"]["rand_event_chance"]:

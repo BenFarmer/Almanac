@@ -35,24 +35,52 @@ import logging
 
 # THIRD PARTY
 from rich import print as rprint
+from rich.logging import RichHandler
+import sqlite3
 
 # PERSONAL
 from almanacmodules import get_sheets
 from almanacmodules.day_roller import DayRoller
 from almanacmodules.get_args import GetArguments
+from almanacmodules.reporting import Reports
 
 
 def main():
     get_arguments = GetArguments()
     parser = get_arguments
     args, time = get_arguments.dicts()
-    logging.critical(args)
+
+    setup_logging(args["log_level"])
+    logging.debug(args)
+
+    conn = create_conn()
 
     master_config = get_config()
-    country_validator(args, time, master_config)
+    country_validator(args, time, master_config, conn)
 
+    if args["report"] == 'y':
+        Reports(args, time, conn)
 
-def country_validator(args, time, master_config):
+    logging.info("[bold red] End of Almanac")
+    print('end of almanac -- from main')
+
+def setup_logging(logging_level):
+    log_level = str(logging_level).upper()
+    rprint(f"[bold red]Current Log Level:[/][bold red blink] {log_level}")
+
+    FORMAT = "%(message)s"
+    logging.basicConfig(
+        level=logging.getLevelName(log_level),
+        format=FORMAT,
+        datefmt="[%X]",
+        handlers=[RichHandler(markup=True)],
+    )
+
+def create_conn():
+    conn = sqlite3.connect(r"/home/ben/Envs/databases/sqlite/Almanac.db")
+    return conn
+
+def country_validator(args, time, master_config, conn):
     """validates that the input country exists within the
     master_config and if it fails, re-runs the validator
     with a new input country.
@@ -66,21 +94,21 @@ def country_validator(args, time, master_config):
         logging.info(
             f"[bold red]input_country validated: {args['location_info']['location_name']}"
         )
-        start_day_index(args, time)
+        start_day_index(args, time, conn)
     else:
         rprint("[red]This country doesn't exist in my library of accepted countries")
         if input("Would you like to try again? y/n: ") == "y":
             args["location_info"]["location_name"] = input(
                 "Please input the country name again: "
             )
-            country_validator(args, time, master_config)
+            country_validator(args, time, master_config, conn)
 
 
-def start_day_index(args, time):
+def start_day_index(args, time, conn):
     """this starts the yearly run of Almanac and is called only after
     the input country is properly validated against the master_config
     """
-    day_roller = DayRoller(args, time)
+    day_roller = DayRoller(args, time, conn)
     day_roller.day_index()
 
 
