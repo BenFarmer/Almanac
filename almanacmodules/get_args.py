@@ -23,8 +23,7 @@ class GetArguments:
         self.arg_dict = self._build_arg_dict()
         self.time_dict = self._build_time_dict()
 
-#        self._setup_logging()
-
+    #        self._setup_logging()
 
     def _parsed_arguments(self):
         # REQUIRED ARGUMENTS
@@ -53,7 +52,7 @@ class GetArguments:
         self.parser.add_argument(
             "-r",
             "--report",
-            choices=['y','n'],
+            choices=["y", "n"],
             help="option to run reporting on currenct Almanac run",
         )
 
@@ -75,8 +74,10 @@ class GetArguments:
     def _build_arg_dict(self):
         def _get_location_id():
             return None
+
         def _get_temp_zone():
             return None
+
         arg_dict = {
             "location_info": {
                 "location_name": self.args.input_location,
@@ -99,8 +100,10 @@ class GetArguments:
             "weather_constants": {
                 "base_precip_chance": self.yaml_config["base_precip_chance"],
             },
-            "log_level": self.args.logging_level,
-            "report": self.args.report,
+            "system": {
+                "log_level": self.args.logging_level,
+                "report": self.args.report,
+            },
         }
         return arg_dict
 
@@ -108,7 +111,9 @@ class GetArguments:
         time = {
             "day_num": self.yaml_config["start_day"],
             "season_num": self.yaml_config["season_num_start"],
-            "season_name": self.yaml_config["seasons"][(self.yaml_config["season_num_start"])],
+            "season_name": self.yaml_config["seasons"][
+                (self.yaml_config["season_num_start"])
+            ],
         }
         return time
 
@@ -118,10 +123,10 @@ class GetArguments:
 
         FORMAT = "%(message)s"
         logging.basicConfig(
-                level=logging.getLevelName(log_level),
-                format=FORMAT,
-                datefmt="[%X]",
-                handlers=[RichHandler(markup=True)],
+            level=logging.getLevelName(log_level),
+            format=FORMAT,
+            datefmt="[%X]",
+            handlers=[RichHandler(markup=True)],
         )
 
     def dicts(self):

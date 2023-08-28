@@ -47,10 +47,9 @@ from almanacmodules.reporting import Reports
 
 def main():
     get_arguments = GetArguments()
-    parser = get_arguments
     args, time = get_arguments.dicts()
 
-    setup_logging(args["log_level"])
+    setup_logging(args["system"]["log_level"])
     logging.debug(args)
 
     conn = create_conn()
@@ -58,11 +57,11 @@ def main():
     master_config = get_config()
     country_validator(args, time, master_config, conn)
 
-    if args["report"] == 'y':
-        Reports(args, time, conn)
+    if args["system"]["report"] == "y":
+        Reports(master_config, args, time, conn)
 
     logging.info("[bold red] End of Almanac")
-    print('end of almanac -- from main')
+
 
 def setup_logging(logging_level):
     log_level = str(logging_level).upper()
@@ -76,9 +75,11 @@ def setup_logging(logging_level):
         handlers=[RichHandler(markup=True)],
     )
 
+
 def create_conn():
     conn = sqlite3.connect(r"/home/ben/Envs/databases/sqlite/Almanac.db")
     return conn
+
 
 def country_validator(args, time, master_config, conn):
     """validates that the input country exists within the
@@ -137,6 +138,7 @@ def get_config():
         effects_config,
     )
     return master_config
+
 
 if __name__ == "__main__":
     main()
