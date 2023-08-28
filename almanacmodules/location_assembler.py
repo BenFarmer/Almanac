@@ -99,9 +99,6 @@ class LocationAssembler:
             finally:
                 prior_bucket = new_stop
 
-        #        print("buckets", buckets)
-        #        print("bucket ranges", self.bucket_ranges)
-
         indv_bio_id = 0
         for bucket in buckets:
             for bio_id in range(bucket):
@@ -132,7 +129,6 @@ class LocationAssembler:
         random.shuffle(self.indv_biomes)
         for i in range(0, len(self.indv_biomes), n):
             yield self.indv_biomes[i : i + n]  # noqa: E203
-            #            print('indv_bioms, (?)', self.indv_biomes)
 
     def _cell_coords(self):
         for id in enumerate(self.indv_biomes):
