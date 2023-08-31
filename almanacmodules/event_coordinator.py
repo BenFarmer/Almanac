@@ -10,7 +10,6 @@
 import random
 
 # THIRD PARTY
-import sqlite3
 
 # PERSONAL
 from almanacmodules.astral import AstralInfo
@@ -78,20 +77,15 @@ class LikelyEvent:
                     row[WEIGHT],
                 )
             )
-        self._update_precip(past_weather)
+        self._update_precip_event(past_weather)
 
-    def _update_precip(
-        self, past_weather
-    ):  # this should probably be renamed to something like 'update precip'
+    def _update_precip_event(self, past_weather):
         region_index = past_weather[-1][
             REGION_ID
         ]  # returns the largest region_id which is also the number of regions
         current_day = past_weather[
             -region_index:
         ]  # last set of weather from past_weather
-
-        #        print()
-        #        print(f"----------------- DAY NUM: {self.day_num} -----------------")
         for region in current_day:
             global score
             score = SCORE_START
@@ -205,7 +199,9 @@ class EventCoordinator:
 
     def _event_determiner(self):
         likely_event = LikelyEvent(self.args, self.time, self.conn)
-        random_event = RandomEvent(self.args, self.time, self.indv_biomes_config, self.conn)
+        random_event = RandomEvent(
+            self.args, self.time, self.indv_biomes_config, self.conn
+        )
 
         def _random_check():
             if random.randint(0, 100) < self.args["event"]["rand_event_chance"]:
