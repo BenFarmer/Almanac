@@ -17,63 +17,43 @@ class Reports:
         self.time = time
         self.conn = conn
         self.cursor = conn.cursor()
+        self.reports = {
+            "astral_events": {},
+            "natural_events": {},
+            "master_timeline": {},
+        }
 
         self.event_counts()
         self.location_info()
 
-        self.location_table, self.arg_table = self.build_tables()
+        self.location_table, self.arg_table, self.report_table = self.build_tables()
         self.pop_arg_table()
         self.pop_loc_table()
+        self.pop_report_table()
         self.output_tables()
 
     def event_counts(self):
-        def potential_astral():
-            """There should not be many astral or natural events that will
-            attempt to happen so our tables will be quite small. because
-            of this the reporting and analysis of these tables will be handled
-            in python and not in SQL
-            """
-            query = self.cursor.execute("""SELECT * FROM astral_events""")
-            events = []
+        def count_potential_astral_event():
+            query = self.cursor.execute("""SELECT COUNT (*) FROM astral_events""")
             for result in query:
-                events.append(result)
+                self.reports["astral_events"]["astral count"] = result[0]
 
-            # this is a pretty sloppy way to do this
-            counts = {
-                "event": 0,
-                "plnt": 0,
-                "moon": 0,
-                "spring": 0,
-                "summer": 0,
-                "winter": 0,
-                "fall": 0,
-            }
-
-            for event in events:
-                counts["event"] += 1
-                if event[1] == "spring":
-                    counts["spring"] += 1
-                elif event[1] == "summer":
-                    counts["summer"] += 1
-                elif event[1] == "winter":
-                    counts["winter"] += 1
-                elif event[1] == "fall":
-                    counts["fall"] += 1
-                elif event[3] == "moon":
-                    counts["moon"] += 1
-                elif event[3] == "planet":
-                    counts["plnt"] += 1
-                print(event[3])
-            print(counts)
-
-        def potential_natural():
-            query = self.cursor.execute("""SELECT * FROM natural_events""")
-            events = []
+        def count_potential_natural_event():
+            query = self.cursor.execute("""SELECT COUNT (*) FROM natural_events""")
             for result in query:
-                events.append(result)
+                self.reports["natural_events"]["natural count"] = result[0]
 
-        potential_astral()
-        potential_natural()
+        def count_master_precip_event():
+            query = self.cursor.execute(
+                """SELECT COUNT (*) FROM master_timeline WHERE precip_event=1"""
+            )
+            for result in query:
+                self.reports["master_timeline"]["precipitation count"] = result[0]
+
+        # what_type_where_what
+        count_potential_astral_event()
+        count_potential_natural_event()
+        count_master_precip_event()
 
     def location_info(self):
         print("location_info")
@@ -92,11 +72,20 @@ class Reports:
             title="ARGUMENTS",
             caption="argument dictionary used in current run of Almanac",
         )
-        arg_table.add_column("sub dictionary key", style="cyan", no_wrap=True)
+        arg_table.add_column("sub dictionary key", style="red", no_wrap=True)
         arg_table.add_column("key", style="magenta", no_wrap=True)
-        arg_table.add_column("value", style="magenta", no_wrap=True)
+        arg_table.add_column("value", style="cyan", no_wrap=True)
 
-        return location_table, arg_table
+        # REPORT TABLE
+        report_table = Table(
+            title="REPORTS",
+            caption="various reports run on Almanac results",
+        )
+        report_table.add_column("topic", style="red", no_wrap=True)
+        report_table.add_column("report", style="cyan", no_wrap=True)
+        report_table.add_column("result", style="magenta", no_wrap=True)
+
+        return location_table, arg_table, report_table
 
     def pop_loc_table(self):
         for country in self.world_config:
@@ -119,7 +108,24 @@ class Reports:
                 else:
                     self.arg_table.add_row("", f"{i}", f"{value[num]}")
 
+    def pop_report_table(self):
+        print(self.reports)
+        sub_dict_keys = list(self.reports)
+        for sub_dict in sub_dict_keys:
+            keys = list(self.reports[sub_dict])
+            for num, i in enumerate(keys):
+                value = list(self.reports[sub_dict].values())
+                if value[num] == value[0]:
+                    self.report_table.add_row(f"{sub_dict}", f"{i}", f"{value[num]}")
+                elif value[num] == value[-1]:
+                    self.report_table.add_row(
+                        "", f"{i}", f"{value[num]}", end_section=True
+                    )
+                else:
+                    self.report_table.add_row("", f"{i}", f"{value[num]}")
+
     def output_tables(self):
         console = Console()
         console.print(self.location_table)
         console.print(self.arg_table)
+        console.print(self.report_table)

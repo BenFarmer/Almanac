@@ -16,18 +16,22 @@
     own monsters, events, and even weather.
 
     REQUIRED ARGUMENTS:
-        -i --input_country          name of the location that you would
-                                    like Almanac to use in its yearly run
+        -i --input_country          -i <country>    name of the location that you would
+                                                    like Almanac to use in its yearly run
 
     OPTIONAL ARGUMENTS:
-        --logging_level             sets the logging level of Almanac
-                                    (Default: CRITICAL)
-        -d --delete_logs            deletes prior logs
+        -l --logging_level          -l <level>      sets the logging level of Almanac
+                                                    (Default: CRITICAL)
+
+        -d --delete_logs            -d <y/n>        deletes prior logs
+
+        -r --report                 -r <y/n>        indicates if you would like reports
+                                                    to be output into the CLI
+                                                    (Default: n)
 
     FUTURE LOGS (to be implemented next package)
-        -l --logs                   specifies how logs are saved
-        -r --run_times              specifies how many times (years) Almanac will run
-                                    (Default: 1)
+        -r --run_times              -r <int>        specifies how many times (years) Almanac will run
+                                                    (Default: 1)
 """
 
 # BUILT-INS
