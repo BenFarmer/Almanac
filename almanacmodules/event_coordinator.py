@@ -21,14 +21,15 @@ REGION_ID = 2
 
 # past_weather list variables
 DAY_NUM = 0
-SEASON = 1
-REGION_ID = 2
-BIOME_NAME = 3
-WEIGHT = 7
+YEAR = 1
+SEASON = 2
+REGION_ID = 3
+BIOME_NAME = 4
+WEIGHT = 8
 
 # score math variables
 SCORE_START = 0
-WEATHER_WEIGHT = 4
+WEATHER_WEIGHT = 5
 SCORE_LIMIT = 190
 
 # RANDOM EVENT CONSTANTS
@@ -50,6 +51,7 @@ class LikelyEvent:
         self.time = time
         self.conn = conn
 
+        self.year = self.time["year"]
         self.day_num = self.time["day_num"]
         self.season_name = self.time["season_name"]
         self.location_id = self.args["location_info"]["location_id"]
@@ -62,15 +64,17 @@ class LikelyEvent:
             FROM regional_weather
             WHERE day_num <= {self.day_num}
                 and
-                day_num >= {self.past_date}"""
+                day_num >= {self.past_date}
+            AND year = {self.year}"""
 
         self.cursor.execute(fetch_past_weather)
-        rows = self.cursor.fetchall()
+        weather = self.cursor.fetchall()
         past_weather = []
-        for row in rows:
+        for row in weather:
             past_weather.append(
                 (
                     row[DAY_NUM],
+                    row[YEAR],
                     row[SEASON],
                     row[REGION_ID],
                     row[BIOME_NAME],
@@ -95,10 +99,10 @@ class LikelyEvent:
                     score += weather[WEATHER_WEIGHT]
             if score >= SCORE_LIMIT:
                 self.cursor.execute(
-                    f"UPDATE regional_weather SET precip_event = 1 WHERE day_num = {self.day_num} AND region_id = {region[2]}"
+                    f"UPDATE regional_weather SET precip_event = 1 WHERE day_num = {self.day_num} AND region_id = {region[3]}"
                 )
                 self.cursor.execute(
-                    f"UPDATE master_timeline SET precip_event = 1 WHERE day_num = {self.day_num} AND region_id = {region[2]}"
+                    f"UPDATE master_timeline SET precip_event = 1 WHERE day_num = {self.day_num} AND region_id = {region[3]}"
                 )
                 self.conn.commit()
 
@@ -132,9 +136,9 @@ class RandomEvent:
             event_description = self.event_details[0][3]
             input_astral = f"""
                 INSERT INTO astral_events
-                    (day_num, season, astral_name, astral_type, event_description)
+                    (day_num, year, season, astral_name, astral_type, event_description)
                 VALUES
-                    ({self.day_num}, '{self.season_name}', '{astral_name}',
+                    ({self.day_num}, {self.time["year"]}, '{self.season_name}', '{astral_name}',
                     '{astral_type}', '{event_description}')
                 """
             self.cursor.execute(input_astral)
@@ -165,9 +169,9 @@ class RandomEvent:
                 event_description = event[4]
                 input_natural = f"""
                     INSERT INTO natural_events
-                        (day_num, season, region_id, biome_name, event_name, severity, event_description)
+                        (day_num, year, season, region_id, biome_name, event_name, severity, event_description)
                     VALUES
-                        ({self.day_num}, '{self.season_name}', {region_id}, '{biome_name}',
+                        ({self.day_num}, {self.time["year"]}, '{self.season_name}', {region_id}, '{biome_name}',
                         '{event_name}',{severity}, '{event_description}')
                     """
                 self.cursor.execute(input_natural)

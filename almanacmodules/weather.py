@@ -15,10 +15,8 @@
 
 # BUILT INS
 import random
-import logging
 
 # THIRD PARTY
-import sqlite3
 
 # PERSONAL
 from almanacmodules.rarity_calc import PercentileCheck
@@ -239,6 +237,7 @@ class RegionalWeather:
 
     def _sqlite(self):
         cursor = self.conn.cursor()
+        year = self.time["year"]
 
         for item in self.weather_pack:
             day_num = item[0]
@@ -256,22 +255,22 @@ class RegionalWeather:
 
             insert_regional_weather = f"""
                     INSERT INTO regional_weather (
-                        day_num, season, region_id, biome_name, precipitation,
+                        day_num, year, season, region_id, biome_name, precipitation,
                         severity, duration, weight, precip_event
                         )
                     VALUES (
-                        {day_num}, '{season}', {region_id}, '{biome_name}', {precipitation},
+                        {day_num}, {year}, '{season}', {region_id}, '{biome_name}', {precipitation},
                         {severity}, {duration}, {weight}, {precip_event}
                         )
                     """
 
             insert_master_timeline = f"""
                     INSERT INTO master_timeline (
-                        day_num, season, region_id, biome_name,
+                        day_num, year, season, region_id, biome_name,
                         precip_event, astral_event, natural_event
                         )
                     VALUES (
-                        {day_num}, '{season}', {region_id}, '{biome_name}',
+                        {day_num}, {year}, '{season}', {region_id}, '{biome_name}',
                         {precip_event}, '{astral_event}', '{natural_event}'
                         )
                     """

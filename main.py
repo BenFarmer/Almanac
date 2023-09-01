@@ -29,8 +29,7 @@
                                                     to be output into the CLI
                                                     (Default: n)
 
-    FUTURE LOGS (to be implemented next package)
-        -r --run_times              -r <int>        specifies how many times (years) Almanac will run
+        -t --run_times              -t <int>        specifies how many times (years) Almanac will run
                                                     (Default: 1)
 """
 

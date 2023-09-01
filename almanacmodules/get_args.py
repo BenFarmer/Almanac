@@ -56,6 +56,13 @@ class GetArguments:
             help="option to run reporting on currenct Almanac run",
         )
 
+        self.parser.add_argument(
+            "-t",
+            "--run_times",
+            default="1",
+            help="how many times (years) Almanac will run",
+        )
+
         self.args = self.parser.parse_args()
 
         if self.args.delete_logs == "y":
@@ -85,7 +92,7 @@ class GetArguments:
                 "temp_zone": _get_temp_zone(),
             },
             "year_info": {
-                "year_num": self.yaml_config["year_num"],
+                "start_year": self.yaml_config["start_year"],
                 "seasons": self.yaml_config["seasons"],
                 "start_day": self.yaml_config["start_day"],
                 "max_day": self.yaml_config["max_day"],
@@ -103,12 +110,14 @@ class GetArguments:
             "system": {
                 "log_level": self.args.logging_level,
                 "report": self.args.report,
+                "run_times": int(self.args.run_times),
             },
         }
         return arg_dict
 
     def _build_time_dict(self):
         time = {
+            "year": self.yaml_config["start_year"],
             "day_num": self.yaml_config["start_day"],
             "season_num": self.yaml_config["season_num_start"],
             "season_name": self.yaml_config["seasons"][
