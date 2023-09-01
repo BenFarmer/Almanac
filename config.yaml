@@ -2,7 +2,7 @@
 season_num_start: 0
 
 # year_info
-year_num: 1325
+start_year: 1325
 seasons: ["spring", "summer", "fall", "winter"]
 months_in_year: 12
 max_day: 366

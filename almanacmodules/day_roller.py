@@ -13,7 +13,6 @@
 import logging
 
 # THIRD PARTY
-import sqlite3
 
 # PERSONAL
 from almanacmodules.weather import RegionalWeather
@@ -25,15 +24,13 @@ from almanacmodules.get_sheets import MasterConfig
 
 class DayRoller:
     def __init__(self, args, time, conn):
-        """DayRoller's job is to index through each day in the year for each of the 100
-            biomes within a selected country (country_select).
+        """DayRoller's job is to index through each day in the year for each of the
+            biomes within a selected location.
         DayRoller does not output anything directly to a log.
-        DayRoller does not decide if an event happens,
-            that is the job of decider.
+        DayRoller does not decide if an event happens.
         DayRoller does not gather the location information of the selected_country,
             that is the job of LocationInfo.
-        DayRoller tracks and stores (potentially a config from LocationInfo) the
-            day_num, the season_num(and season_name)."""
+        """
         self.args = args
         self.time = time
         self.conn = conn
@@ -69,23 +66,35 @@ class DayRoller:
         STEP 5 - SEND DAILY EVENT BUNDLE TO OUTPUT MANAGER
         """
         logging.info("[bold red]day_index started")
-        for self.time["day_num"] in range(
-            self.args["year_info"]["max_day"]
-        ):  # daily index
+        for year in range(self.args["system"]["run_times"]):
+            print(year)
+            print(self.time)
+            for self.time["day_num"] in range(
+                self.args["year_info"]["max_day"]
+            ):  # daily index
+                self._season_updater()
+                RegionalWeather(
+                    self.args, self.time, self.indv_biomes_config, self.conn
+                )  # determines regional weather and loads into SQLITE DB
+                EventCoordinator(
+                    self.args, self.time, self.indv_biomes_config, self.conn
+                )
 
-            self._season_updater()
-            RegionalWeather(
-                self.args, self.time, self.indv_biomes_config, self.conn
-            )  # determines regional weather and loads into SQLITE DB
-            EventCoordinator(self.args, self.time, self.indv_biomes_config, self.conn)
-        # master timer is run outside of loop after it is completed
+            # this segment here is to update to the next year but also
+            # double checks that every year is starting on the correct day/season
+            # this needs to be worked so it just copies a clean snapshot of the original
+            # starting state of Almanac
+            self.time["year"] += 1
+            self.time["day_num"] = 1
+            self.time["season_num"] = 0
+            self.time["season_name"] = "spring"
         self.master_timer.update()
 
     def _create_sqlite_tables(self):
-        regional_weather = """CREATE TABLE IF NOT EXISTS regional_weather (day_num INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, precipitation BOOL NOT NULL, severity INTEGER NOT NULL, duration INTEGER NOT NULL, weight INTEGER NOT NULL, precip_event BOOL NOT NULL)"""
-        natural_events = """CREATE TABLE IF NOT EXISTS natural_events (day_num INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, event_name STRING NOT NULL, severity INTEGER NOT NULL, event_description STRING NOT NULL)"""
-        astral_events = """CREATE TABLE IF NOT EXISTS astral_events (day_num INTEGER NOT NULL, season STRING NOT NULL, astral_name STRING NOT NULL, astral_type STRING NOT NULL, event_description STRING NOT NULL)"""
-        master_timeline = """CREATE TABLE IF NOT EXISTS master_timeline (day_num INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, precip_event BOOL NOT NULL, astral_event STRING NOT NULL, natural_event STRING NOT NULL)"""
+        regional_weather = """CREATE TABLE IF NOT EXISTS regional_weather (day_num INTEGER NOT NULL, year INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, precipitation BOOL NOT NULL, severity INTEGER NOT NULL, duration INTEGER NOT NULL, weight INTEGER NOT NULL, precip_event BOOL NOT NULL)"""
+        natural_events = """CREATE TABLE IF NOT EXISTS natural_events (day_num INTEGER NOT NULL, year INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, event_name STRING NOT NULL, severity INTEGER NOT NULL, event_description STRING NOT NULL)"""
+        astral_events = """CREATE TABLE IF NOT EXISTS astral_events (day_num INTEGER NOT NULL, year INTEGER NOT NULL, season STRING NOT NULL, astral_name STRING NOT NULL, astral_type STRING NOT NULL, event_description STRING NOT NULL)"""
+        master_timeline = """CREATE TABLE IF NOT EXISTS master_timeline (day_num INTEGER NOT NULL, year INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, precip_event BOOL NOT NULL, astral_event STRING NOT NULL, natural_event STRING NOT NULL)"""
         delete_old_regional_weather = """DELETE FROM regional_weather"""
         delete_old_master_timeline = """DELETE FROM master_timeline"""
         delete_old_natural_events = """DELETE FROM natural_events"""
@@ -108,8 +117,6 @@ class DayRoller:
             self.conn.commit()
 
     def _season_updater(self):  # called from day_index
-        #        get_array = caller.GetArray()
-        #        self.season = get_array.get_seasons(self.season_num)
         num = self.time["season_num"]
         self.time["season_name"] = self.args["year_info"]["seasons"][num]
         if (self.time["day_num"] / self.args["year_info"]["season_length"]) in [
