@@ -38,6 +38,45 @@ class Reports:
             for result in query:
                 self.reports["astral_events"]["astral count"] = result[0]
 
+        def avg_potential_astral_event():
+            query = self.cursor.execute(
+                """
+                    SELECT avg(count)
+                    FROM (
+                        SELECT COUNT(*) as count
+                        FROM astral_events T
+                        GROUP BY T.year
+                        )"""
+            )
+            for result in query:
+                self.reports["astral_events"]["astral avg"] = result[0]
+
+        def max_potential_astral_event():
+            query = self.cursor.execute(
+                """
+                    SELECT max(count)
+                    FROM (
+                        SELECT COUNT(*) as count
+                        FROM astral_events T
+                        GROUP BY T.year
+                        )"""
+            )
+            for result in query:
+                self.reports["astral_events"]["astral max"] = result[0]
+
+        def min_potential_astral_event():
+            query = self.cursor.execute(
+                """
+                    SELECT min(count)
+                    FROM (
+                        SELECT COUNT(*) as count
+                        FROM astral_events T
+                        GROUP BY T.year
+                        )"""
+            )
+            for result in query:
+                self.reports["astral_events"]["astral min"] = result[0]
+
         def count_potential_natural_event():
             query = self.cursor.execute("""SELECT COUNT (*) FROM natural_events""")
             for result in query:
@@ -52,6 +91,10 @@ class Reports:
 
         # what_type_where_what
         count_potential_astral_event()
+        avg_potential_astral_event()
+        min_potential_astral_event()
+        max_potential_astral_event()
+
         count_potential_natural_event()
         count_master_precip_event()
 
@@ -109,7 +152,6 @@ class Reports:
                     self.arg_table.add_row("", f"{i}", f"{value[num]}")
 
     def pop_report_table(self):
-        print(self.reports)
         sub_dict_keys = list(self.reports)
         for sub_dict in sub_dict_keys:
             keys = list(self.reports[sub_dict])

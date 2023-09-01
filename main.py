@@ -49,7 +49,8 @@ from almanacmodules.reporting import Reports
 
 
 def main():
-    get_arguments = GetArguments()
+    master_config = get_config()
+    get_arguments = GetArguments(master_config)
     args, time = get_arguments.dicts()
 
     setup_logging(args["system"]["log_level"])
@@ -57,7 +58,6 @@ def main():
 
     conn = create_conn()
 
-    master_config = get_config()
     country_validator(args, time, master_config, conn)
 
     if args["system"]["report"] == "y":

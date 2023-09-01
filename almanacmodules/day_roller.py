@@ -39,7 +39,6 @@ class DayRoller:
         self.world_config = master_config.world_config_master
         self.biome_config = master_config.biome_config_master
 
-        self._get_country_id()  # should be handeled by an arg_dict maker
         self._create_sqlite_tables()
 
         location_assembler = LocationAssembler(
@@ -67,8 +66,7 @@ class DayRoller:
         """
         logging.info("[bold red]day_index started")
         for year in range(self.args["system"]["run_times"]):
-            print(year)
-            print(self.time)
+            logging.info(f"current year: {self.time['year']}")
             for self.time["day_num"] in range(
                 self.args["year_info"]["max_day"]
             ):  # daily index
@@ -134,13 +132,3 @@ class DayRoller:
                 logging.debug(
                     f"[bold red]season updated to:[/] {self.time['season_name']}"
                 )
-
-    def _get_country_id(
-        self,
-    ):  # called from __init_, potentially move to get_args main or other module_
-        for row, name in enumerate(self.world_config):
-            if (
-                self.args["location_info"]["location_name"]
-                == self.world_config[row].name
-            ):
-                self.args["location_info"]["location_id"] = self.world_config[row].id

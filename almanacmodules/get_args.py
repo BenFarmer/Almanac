@@ -14,7 +14,10 @@ from almanacmodules.log_write import LogReset
 
 
 class GetArguments:
-    def __init__(self):
+    def __init__(self, master_config):
+        self.master_config = master_config
+        self.world_config = master_config.world_config_master
+
         self.parser = argparse.ArgumentParser()
         self.args = None
         self._parsed_arguments()
@@ -23,7 +26,8 @@ class GetArguments:
         self.arg_dict = self._build_arg_dict()
         self.time_dict = self._build_time_dict()
 
-    #        self._setup_logging()
+        self._get_location_id()
+        self._get_temp_zone()
 
     def _parsed_arguments(self):
         # REQUIRED ARGUMENTS
@@ -78,18 +82,27 @@ class GetArguments:
             finally:
                 return yaml_config
 
+    def _get_location_id(self):
+        for row, name in enumerate(self.world_config):
+            if (
+                self.arg_dict["location_info"]["location_name"]
+                == self.world_config[row].name
+            ):
+                self.arg_dict["location_info"]["location_id"] = self.world_config[
+                    row
+                ].id
+
+    def _get_temp_zone(self):
+        for country in self.world_config:
+            if country.id == self.arg_dict["location_info"]["location_id"]:
+                self.arg_dict["location_info"]["temp_zone"] = country.temp_zone
+
     def _build_arg_dict(self):
-        def _get_location_id():
-            return None
-
-        def _get_temp_zone():
-            return None
-
         arg_dict = {
             "location_info": {
                 "location_name": self.args.input_location,
-                "location_id": _get_location_id(),
-                "temp_zone": _get_temp_zone(),
+                "location_id": None,
+                "temp_zone": None,
             },
             "year_info": {
                 "start_year": self.yaml_config["start_year"],

@@ -99,10 +99,10 @@ class LikelyEvent:
                     score += weather[WEATHER_WEIGHT]
             if score >= SCORE_LIMIT:
                 self.cursor.execute(
-                    f"UPDATE regional_weather SET precip_event = 1 WHERE day_num = {self.day_num} AND region_id = {region[3]}"
+                    f"UPDATE regional_weather SET precip_event = 1 WHERE year = {self.time['year']} AND day_num = {self.day_num} AND region_id = {region[3]}"
                 )
                 self.cursor.execute(
-                    f"UPDATE master_timeline SET precip_event = 1 WHERE day_num = {self.day_num} AND region_id = {region[3]}"
+                    f"UPDATE master_timeline SET precip_event = 1 WHERE year = {self.time['year']} AND day_num = {self.day_num} AND region_id = {region[3]}"
                 )
                 self.conn.commit()
 
