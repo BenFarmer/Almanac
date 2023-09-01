@@ -28,6 +28,7 @@ from almanacmodules.get_sheets import MasterConfig
 # REGIONAL WEATHER CONSTANTS
 BASE_PRECIP_CHANCE = 0
 
+# LIST LOCATIONS !!!! THIS IS BAD
 REGION_ID = 0
 BIOME_NAME = 1
 
@@ -81,7 +82,6 @@ class RegionalWeather:
         self.world_config = master_config.world_config_master
         self.percentile = PercentileCheck()
 
-        self._get_temp_zone()  # should be moved into arg builder
         self.region_pack = []
         self._get_region_info()  # should be moved into arg buider
         self.precip_event = (
@@ -92,11 +92,6 @@ class RegionalWeather:
         # contains: [day_num, region_id, region biome, precipitation, severity, duration, weight, precip_event]
         self._weather()
         self._sqlite()
-
-    def _get_temp_zone(self):  # should bemoved into arg_builder module
-        for country in self.world_config:
-            if country.id == self.args["location_info"]["location_id"]:
-                self.args["location_info"]["temp_zone"] = country.temp_zone
 
     def _get_region_info(self):
         # builds a initial pack with region id, then removes duplicates and appends into region pack
@@ -172,29 +167,22 @@ class RegionalWeather:
             biome = self.region_pack[id][BIOME_NAME]
             # forest, plains, desert, swamp, jungle, mountain, lake, river, beach
             if biome == "desert":
-                mod = self.precip_chance // DESERT_MOD
-                self.precip_chance = mod
+                self.precip_chance = self.precip_chance // DESERT_MOD
             elif biome == "mountain":
-                mod = self.precip_chance // MOUNTAIN_MOD
-                self.precip_chance = mod
+                self.precip_chance = self.precip_chance // MOUNTAIN_MOD
             elif biome == "jungle":
-                mod = self.precip_chance * JUNGLE_MOD
-                self.precip_chance = mod
+                self.precip_chance = self.precip_chance * JUNGLE_MOD
             elif biome == "swamp":
-                mod = self.precip_chance * SWAMP_MOD
-                self.precip_chance = mod
+                self.precip_chance = self.precip_chance * SWAMP_MOD
 
         def temp_changes():
             temp_zone = self.args["location_info"]["temp_zone"]
             if temp_zone == 1:
-                mod = self.precip_chance // ZONE_1_MOD
-                self.precip_chance = mod
+                self.precip_chance = self.precip_chance // ZONE_1_MOD
             elif temp_zone == 5:
-                mod = self.precip_chance // ZONE_5_MOD
-                self.precip_chance = mod
+                self.precip_chance = self.precip_chance // ZONE_5_MOD
             elif temp_zone == 3:
-                mod = self.precip_chance * ZONE_3_MOD
-                self.precip_chance = mod
+                self.precip_chance = self.precip_chance * ZONE_3_MOD
 
         seasonal_changes()
         biome_changes()
@@ -225,13 +213,11 @@ class RegionalWeather:
                 return severity
 
     def calc_duration(self, severity):
-        # baseline duration = 1 day
         if severity == 1:
             return 1 + random.randint(0, 2)
         return 1 + random.randint(0, 1)
 
     def calc_weight(self, severity):
-        # this is a separate function in case this expands later
         weight = (WEIGHT_INVERSE - severity) * WEIGHT_MULTIPLE_MOD
         return weight
 
