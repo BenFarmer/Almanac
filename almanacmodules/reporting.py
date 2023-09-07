@@ -33,69 +33,89 @@ class Reports:
         self.output_tables()
 
     def event_counts(self):
-        def count_potential_astral_event():
-            query = self.cursor.execute("""SELECT COUNT (*) FROM astral_events""")
+        def count_potential_event(table):
+            query = self.cursor.execute(f"""SELECT COUNT (*) FROM {table}""")
             for result in query:
-                self.reports["astral_events"]["astral count"] = result[0]
+                self.reports[f"{table}"]["total number of events"] = result[0]
 
-        def avg_potential_astral_event():
-            query = self.cursor.execute(
-                """
+        def avg_potential_event(table):
+            query = self.cursor.execute(f"""
                     SELECT avg(count)
                     FROM (
                         SELECT COUNT(*) as count
-                        FROM astral_events T
+                        FROM {table} T
                         GROUP BY T.year
                         )"""
             )
             for result in query:
-                self.reports["astral_events"]["astral avg"] = result[0]
+                self.reports[f"{table}"]["average amount of events/year"] = result[0]
 
-        def max_potential_astral_event():
-            query = self.cursor.execute(
-                """
+        def max_potential_event(table):
+            query = self.cursor.execute(f"""
                     SELECT max(count)
                     FROM (
                         SELECT COUNT(*) as count
-                        FROM astral_events T
+                        FROM {table} T
                         GROUP BY T.year
                         )"""
             )
             for result in query:
-                self.reports["astral_events"]["astral max"] = result[0]
+                self.reports[f"{table}"]["highest amount of events/year"] = result[0]
 
-        def min_potential_astral_event():
-            query = self.cursor.execute(
-                """
+        def min_potential_event(table):
+            query = self.cursor.execute(f"""
                     SELECT min(count)
                     FROM (
                         SELECT COUNT(*) as count
-                        FROM astral_events T
+                        FROM {table} T
                         GROUP BY T.year
                         )"""
             )
             for result in query:
-                self.reports["astral_events"]["astral min"] = result[0]
+                self.reports[f"{table}"]["least amount of events/year"] = result[0]
 
-        def count_potential_natural_event():
-            query = self.cursor.execute("""SELECT COUNT (*) FROM natural_events""")
+        def most_common_season(table):
+            query = self.cursor.execute(f"""
+                SELECT max(count), season
+                FROM (
+                    SELECT COUNT(*) as count, season
+                    FROM {table} T
+                    GROUP BY T.season
+                )""")
             for result in query:
-                self.reports["natural_events"]["natural count"] = result[0]
+                self.reports[f"{table}"]["season with the most events"] = (result[0], result[1])
 
+        # NATURAL EVENT SPECIFIC
+        def most_common_biome():
+            query = self.cursor.execute(f"""
+                    SELECT max(count), biome_name
+                    FROM (
+                        SELECT COUNT(*) as count, biome_name
+                        FROM natural_events T
+                        GROUP BY T.biome_name
+                    )"""
+            )
+            for result in query:
+                self.reports[f"natural_events"]["biome with the most events"] = (result[0], result[1])
+
+        
+        # MASTER TIMELINE SPECIFIC
         def count_master_precip_event():
             query = self.cursor.execute(
                 """SELECT COUNT (*) FROM master_timeline WHERE precip_event=1"""
             )
             for result in query:
-                self.reports["master_timeline"]["precipitation count"] = result[0]
+                self.reports["master_timeline"]["total number of precip events"] =  result[0]
 
         # what_type_where_what
-        count_potential_astral_event()
-        avg_potential_astral_event()
-        min_potential_astral_event()
-        max_potential_astral_event()
-
-        count_potential_natural_event()
+        for event in self.args["event"]["event_names"]:
+            table = f"{event}_events"
+            count_potential_event(table)
+            avg_potential_event(table)
+            min_potential_event(table)
+            max_potential_event(table)
+            most_common_season(table)
+        most_common_biome()
         count_master_precip_event()
 
     def location_info(self):

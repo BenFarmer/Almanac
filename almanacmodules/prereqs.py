@@ -52,19 +52,6 @@ _data = {
 rule_flood = NaturalRule(**flood_data)
 
 
-class high_precip(BaseModel):
-    # flood, snowstorm, mudslide
-    precip_period: int  # 7 (days)
-    precip_score: int  # <= 190
-
-
-class low_precip(BaseModel):
-    # drought, wildfire
-    precip_period: int  # 30 (days)
-    precip_score: int  # >= 20
-
-
-
 class NaturalPreReqs:
     def __init__(self):
         # days prior, score requirement, over/under
