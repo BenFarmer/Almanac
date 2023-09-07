@@ -67,21 +67,17 @@ class LocationAssembler:
         # then assigns each unique indv_biome within the self.cells a group number
         # finished self.cells: ([id, biome, [x,y], 1], [id, biomes [x, y], 1], etc)
 
-    #        print('cells', self.cells)
 
     def _biome_assigner(self):
         biome_score = self.world_config[self.location_id].dict(include=self.biomes)
         initial_buckets = biome_score.values()
-        #        print('inital_buckets of 100', initial_buckets)
         buckets = []
         for value in initial_buckets:
             buckets.append(round(value * 0.81))
-        #        print('buckets out of 81', buckets)
 
         bucket_count = 0
         for bucket in buckets:
             bucket_count += int(bucket)
-        #            print(bucket_count)
 
         if bucket_count == 80:
             buckets[8] += 1
