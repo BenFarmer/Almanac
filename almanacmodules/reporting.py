@@ -39,7 +39,8 @@ class Reports:
                 self.reports[f"{table}"]["total number of events"] = result[0]
 
         def avg_potential_event(table):
-            query = self.cursor.execute(f"""
+            query = self.cursor.execute(
+                f"""
                     SELECT avg(count)
                     FROM (
                         SELECT COUNT(*) as count
@@ -51,7 +52,8 @@ class Reports:
                 self.reports[f"{table}"]["average amount of events/year"] = result[0]
 
         def max_potential_event(table):
-            query = self.cursor.execute(f"""
+            query = self.cursor.execute(
+                f"""
                     SELECT max(count)
                     FROM (
                         SELECT COUNT(*) as count
@@ -63,7 +65,8 @@ class Reports:
                 self.reports[f"{table}"]["highest amount of events/year"] = result[0]
 
         def min_potential_event(table):
-            query = self.cursor.execute(f"""
+            query = self.cursor.execute(
+                f"""
                     SELECT min(count)
                     FROM (
                         SELECT COUNT(*) as count
@@ -75,19 +78,25 @@ class Reports:
                 self.reports[f"{table}"]["least amount of events/year"] = result[0]
 
         def most_common_season(table):
-            query = self.cursor.execute(f"""
+            query = self.cursor.execute(
+                f"""
                 SELECT max(count), season
                 FROM (
                     SELECT COUNT(*) as count, season
                     FROM {table} T
                     GROUP BY T.season
-                )""")
+                )"""
+            )
             for result in query:
-                self.reports[f"{table}"]["season with the most events"] = (result[0], result[1])
+                self.reports[f"{table}"]["season with the most total events"] = (
+                    result[0],
+                    result[1],
+                )
 
         # NATURAL EVENT SPECIFIC
         def most_common_biome():
-            query = self.cursor.execute(f"""
+            query = self.cursor.execute(
+                """
                     SELECT max(count), biome_name
                     FROM (
                         SELECT COUNT(*) as count, biome_name
@@ -96,16 +105,20 @@ class Reports:
                     )"""
             )
             for result in query:
-                self.reports[f"natural_events"]["biome with the most events"] = (result[0], result[1])
+                self.reports["natural_events"]["biome with the most total events"] = (
+                    result[0],
+                    result[1],
+                )
 
-        
         # MASTER TIMELINE SPECIFIC
         def count_master_precip_event():
             query = self.cursor.execute(
                 """SELECT COUNT (*) FROM master_timeline WHERE precip_event=1"""
             )
             for result in query:
-                self.reports["master_timeline"]["total number of precip events"] =  result[0]
+                self.reports["master_timeline"][
+                    "total number of precip events"
+                ] = result[0]
 
         # what_type_where_what
         for event in self.args["event"]["event_names"]:

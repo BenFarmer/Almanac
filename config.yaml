@@ -6,7 +6,7 @@ start_year: 1325
 seasons: ["spring", "summer", "fall", "winter"]
 months_in_year: 12
 max_day: 366
-season_length: 3
+season_length: 90
 month_length: 30 #could maybe be calculated
 start_day: 1
 

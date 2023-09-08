@@ -47,6 +47,7 @@ class GetArguments:
         )
 
         self.parser.add_argument(
+            "-l",
             "--logging_level",
             default="warning",
             choices=["debug", "info", "warning", "error", "critical"],
