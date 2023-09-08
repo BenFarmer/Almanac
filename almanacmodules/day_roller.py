@@ -116,8 +116,11 @@ class DayRoller:
 
     def _season_updater(self):  # called from day_index
         num = self.time["season_num"]
+        day = self.time["day_num"]
+        season_length = self.args["year_info"]["season_length"]
         self.time["season_name"] = self.args["year_info"]["seasons"][num]
-        if (self.time["day_num"] / self.args["year_info"]["season_length"]) in [
+
+        if (day / season_length) in [
             1,
             2,
             3,

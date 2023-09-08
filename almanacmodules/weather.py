@@ -73,6 +73,13 @@ class RegionalWeather:
                 1 - season
                 2 - temp_zone
                 3 - biome"""
+
+        # change weight value in the sqlite db to just a precip value
+        # precip value is inherited from each previous day, and starts at
+        # somewhere around 50-100 maybe depending on biome
+        # each day if there is precip, the value increases by the weight of the precip
+        # and each day there is no precip, the value decreses based on biome
+        # need to remove the duration of precip, its calculated purely each day
         self.args = args
         self.time = time
         self.indv_biomes_config = indv_biomes_config

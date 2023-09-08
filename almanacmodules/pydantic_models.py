@@ -10,19 +10,12 @@
 # THIRD PARTY
 from pydantic import BaseModel
 
-# class biome(BaseModel):
-#    forest: int
-#    plains: int
-#    desert: int
-#    swamp: int
-#    jungle: int
-#    mountain: int
-#    lake: int
-#    river: int
-#    ocean: int
-#    beach: int
-#    underdark: int
-#    urban: int
+
+class NaturalRule(BaseModel):
+    name: str
+    period: int
+    precip_score: int
+    base_duration: int
 
 
 class world(BaseModel):

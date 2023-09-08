@@ -92,6 +92,10 @@ class LikelyEvent:
         ]  # last set of weather from past_weather
         for region in current_day:
             global score
+            # maybe each day inherits the precip value of the previous day
+            # and the weight score adds to that value
+            # but each day without rain reduces the value by some amount
+            # potentially based on biome
             score = SCORE_START
 
             for weather in past_weather:
