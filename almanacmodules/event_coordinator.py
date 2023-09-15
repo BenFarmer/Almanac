@@ -49,7 +49,7 @@ class LikelyEvent:
     def __init__(self, args, time, conn):
         self.args = args
         self.time = time
-        self.conn = conn
+        self.cursor = conn.cursor()
 
         self.year = self.time["year"]
         self.day_num = self.time["day_num"]
@@ -58,57 +58,24 @@ class LikelyEvent:
         self.past_date = self.day_num - DAYS_PAST
         self.cursor = conn.cursor()
 
-    def read_weather(self):
-        fetch_past_weather = f"""
-            SELECT *
+        self.check_precip_value()
+
+    def check_precip_value(self):
+        # needs to get precip value
+        # needs to check prereqs to see if precip value can cause anything
+        # will attempt to do that
+        # will insert the new precip related event into natural events
+        query = self.cursor.execute(
+            f"""
+            SELECT precip_value, biome_name
             FROM regional_weather
-            WHERE day_num <= {self.day_num}
-                and
-                day_num >= {self.past_date}
-            AND year = {self.year}"""
-
-        self.cursor.execute(fetch_past_weather)
-        weather = self.cursor.fetchall()
-        past_weather = []
-        for row in weather:
-            past_weather.append(
-                (
-                    row[DAY_NUM],
-                    row[YEAR],
-                    row[SEASON],
-                    row[REGION_ID],
-                    row[BIOME_NAME],
-                    row[WEIGHT],
-                )
-            )
-        self._update_precip_event(past_weather)
-
-    def _update_precip_event(self, past_weather):
-        region_index = past_weather[-1][
-            REGION_ID
-        ]  # returns the largest region_id which is also the number of regions
-        current_day = past_weather[
-            -region_index:
-        ]  # last set of weather from past_weather
-        for region in current_day:
-            global score
-            # maybe each day inherits the precip value of the previous day
-            # and the weight score adds to that value
-            # but each day without rain reduces the value by some amount
-            # potentially based on biome
-            score = SCORE_START
-
-            for weather in past_weather:
-                if weather[REGION_ID] == region[REGION_ID]:
-                    score += weather[WEATHER_WEIGHT]
-            if score >= SCORE_LIMIT:
-                self.cursor.execute(
-                    f"UPDATE regional_weather SET precip_event = 1 WHERE year = {self.time['year']} AND day_num = {self.day_num} AND region_id = {region[3]}"
-                )
-                self.cursor.execute(
-                    f"UPDATE master_timeline SET precip_event = 1 WHERE year = {self.time['year']} AND day_num = {self.day_num} AND region_id = {region[3]}"
-                )
-                self.conn.commit()
+            WHERE day_num = {self.day_num}
+            AND year = {self.year}
+            """
+        )
+        for result in query:
+            rslt = []
+            rslt.append(result)
 
 
 class RandomEvent:
@@ -206,7 +173,7 @@ class EventCoordinator:
         self._event_determiner()
 
     def _event_determiner(self):
-        likely_event = LikelyEvent(self.args, self.time, self.conn)
+        LikelyEvent(self.args, self.time, self.conn)
         random_event = RandomEvent(
             self.args, self.time, self.indv_biomes_config, self.conn
         )
@@ -215,5 +182,4 @@ class EventCoordinator:
             if random.randint(0, 100) < self.args["event"]["rand_event_chance"]:
                 random_event.event()
 
-        likely_event.read_weather()
         _random_check()

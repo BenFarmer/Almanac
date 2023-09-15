@@ -5,6 +5,10 @@
 # THIRD PARTY
 from rich.console import Console
 from rich.table import Table
+from rich import print
+
+import plotly.express as px
+import plotly.graph_objects as go
 
 # PERSONAL
 
@@ -22,15 +26,25 @@ class Reports:
             "natural_events": {},
             "master_timeline": {},
         }
+        self.weather_reports = {
+            "avg precip value": {},
+            "avg season precip value": {},
+        }
 
         self.event_counts()
-        self.location_info()
 
-        self.location_table, self.arg_table, self.report_table = self.build_tables()
+        (
+            self.location_table,
+            self.arg_table,
+            self.report_table,
+            self.weather_table,
+        ) = self.build_tables()
         self.pop_arg_table()
         self.pop_loc_table()
         self.pop_report_table()
+        self.pop_weather_table()
         self.output_tables()
+        self.output_graphs()
 
     def event_counts(self):
         def count_potential_event(table):
@@ -120,19 +134,58 @@ class Reports:
                     "total number of precip events"
                 ] = result[0]
 
-        # what_type_where_what
-        for event in self.args["event"]["event_names"]:
-            table = f"{event}_events"
-            count_potential_event(table)
-            avg_potential_event(table)
-            min_potential_event(table)
-            max_potential_event(table)
-            most_common_season(table)
-        most_common_biome()
-        count_master_precip_event()
+        def count_master_astral_event():
+            self.reports["master_timeline"][
+                "total number of astral_events"
+            ] = "not yet implemented"
 
-    def location_info(self):
-        print("location_info")
+        # WEATHER SPECIFIC
+        def avg_weather_biome():
+            for season in self.time["seasons"]:
+                for biome in self.args["location_info"]["biomes"]:
+                    query = self.cursor.execute(
+                        f"""
+                        SELECT ROUND(AVG(precip_value))
+                        FROM regional_weather
+                        WHERE biome_name = "{biome}"
+                        AND season = "{season}"
+                        """
+                    )
+                    for result in query:
+                        self.weather_reports["avg precip value"][
+                            f"{biome} in {season}"
+                        ] = result[0]
+
+        def avg_weather_season():
+            for season in self.time["seasons"]:
+                query = self.cursor.execute(
+                    f"""
+                    SELECT ROUND(AVG(precip_value))
+                    FROM regional_weather
+                    WHERE season = "{season}"
+                    """
+                )
+                for result in query:
+                    self.weather_reports["avg season precip value"][
+                        f"{season}"
+                    ] = result[0]
+
+        # what_type_where_what
+        try:
+            for event in self.args["event"]["event_names"]:
+                table = f"{event}_events"
+                count_potential_event(table)
+                avg_potential_event(table)
+                min_potential_event(table)
+                max_potential_event(table)
+                most_common_season(table)
+            most_common_biome()
+            count_master_precip_event()
+
+            avg_weather_biome()
+            avg_weather_season()
+        except OSError as e:
+            print(e)
 
     def build_tables(self):
         # EXPANDED LOCATION TABLE
@@ -161,7 +214,16 @@ class Reports:
         report_table.add_column("report", style="cyan", no_wrap=True)
         report_table.add_column("result", style="magenta", no_wrap=True)
 
-        return location_table, arg_table, report_table
+        # WEATHER TABLE
+        weather_table = Table(
+            title="WEATHER REPORTS",
+            caption="weather reporting throughout Almanac",
+        )
+        weather_table.add_column("focus", style="red", no_wrap=True)
+        weather_table.add_column("report", style="cyan", no_wrap=True)
+        weather_table.add_column("result", style="magenta", no_wrap=True)
+
+        return location_table, arg_table, report_table, weather_table
 
     def pop_loc_table(self):
         for country in self.world_config:
@@ -199,8 +261,51 @@ class Reports:
                 else:
                     self.report_table.add_row("", f"{i}", f"{value[num]}")
 
+    def pop_weather_table(self):
+        sub_dict_keys = list(self.weather_reports)
+        for sub_dict in sub_dict_keys:
+            keys = list(self.weather_reports[sub_dict])
+            for num, i in enumerate(keys):
+                value = list(self.weather_reports[sub_dict].values())
+                if value[num] == value[0]:
+                    self.weather_table.add_row(f"{sub_dict}", f"{i}", f"{value[num]}")
+                elif value[num] == value[-1]:
+                    self.weather_table.add_row(
+                        "", f"{i}", f"{value[num]}", end_section=True
+                    )
+                else:
+                    self.weather_table.add_row("", f"{i}", f"{value[num]}")
+
     def output_tables(self):
         console = Console()
         console.print(self.location_table)
         console.print(self.arg_table)
         console.print(self.report_table)
+        console.print(self.weather_table)
+
+    def output_graphs(self):
+        """This SQL code returns each biome and its avg precip value for each day
+        across every single day
+        EX. result:
+        ('lake',    205,    70.5)
+        [0]         [1]     [2]
+        biome       day     avg_val
+        """
+        for day in range(self.args["year_info"]["max_day"]):
+            query = self.cursor.execute(
+                f"""
+                SELECT biome_name,
+                        {day} AS n_day,
+                        ROUND(AVG(precip_value), 2)
+                FROM regional_weather
+                WHERE day_num = {day}
+                GROUP BY biome_name
+                """
+            )
+            for result in query:
+                print(result)
+                return
+        fig = px.bar(x=["a", "b", "c"], y=[1, 2, 3])
+        fig_widget = go.FigureWidget(fig)
+        fig.show()
+        fig_widget

@@ -104,6 +104,7 @@ class GetArguments:
                 "location_name": self.args.input_location,
                 "location_id": None,
                 "temp_zone": None,
+                "biomes": self.yaml_config["biomes"],
             },
             "year_info": {
                 "start_year": self.yaml_config["start_year"],
@@ -137,6 +138,7 @@ class GetArguments:
             "season_name": self.yaml_config["seasons"][
                 (self.yaml_config["season_num_start"])
             ],
+            "seasons": self.yaml_config["seasons"],
         }
         return time
 
