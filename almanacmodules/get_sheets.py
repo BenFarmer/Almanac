@@ -17,7 +17,7 @@ from googleapiclient.discovery import build
 
 # PERSONAL
 from almanacmodules import cred_check
-from almanacmodules import config
+from almanacmodules import pydantic_models
 
 EXTENDED_CFG_ID = "16Q2BKEWQW5A2nQ77AQbSINZ7tG4LJRVhGHfvfKHC0EM"
 ranges = (
@@ -102,7 +102,7 @@ class SheetConversion:
         world_model = []
         for row in world_raw:
             world_model.append(
-                config.world(
+                pydantic_models.world(
                     id=row[0],
                     name=row[1],
                     type=row[2],
@@ -127,7 +127,7 @@ class SheetConversion:
         monster_model = []
         for row in monster_raw:
             monster_model.append(
-                config.monster(
+                pydantic_models.monster(
                     id=row[0],
                     name=row[1],
                     type=row[2],
@@ -148,18 +148,20 @@ class SheetConversion:
 
         biome_model = []
         for row in biome_raw:
-            biome_model.append(config.biome(id=row[0], name=row[1]))
+            biome_model.append(pydantic_models.biome(id=row[0], name=row[1]))
 
         astral_model = []
         for row in astral_raw:
             astral_model.append(
-                config.astral(id=row[0], name=row[1], type=row[2], moon_of=row[3])
+                pydantic_models.astral(
+                    id=row[0], name=row[1], type=row[2], moon_of=row[3]
+                )
             )
 
         natural_model = []
         for row in natural_raw:
             natural_model.append(
-                config.natural(
+                pydantic_models.natural(
                     id=row[0],
                     name=row[1],
                     forest=row[2],
@@ -182,7 +184,7 @@ class SheetConversion:
         effects_model = []
         for row in effects_raw:
             effects_model.append(
-                config.effects(
+                pydantic_models.effects(
                     id=row[0],
                     type=row[1],
                     rarity=row[2],

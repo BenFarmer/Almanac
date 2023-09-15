@@ -89,7 +89,7 @@ class DayRoller:
         self.master_timer.update()
 
     def _create_sqlite_tables(self):
-        regional_weather = """CREATE TABLE IF NOT EXISTS regional_weather (day_num INTEGER NOT NULL, year INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, precipitation BOOL NOT NULL, severity INTEGER NOT NULL, duration INTEGER NOT NULL, weight INTEGER NOT NULL, precip_event BOOL NOT NULL)"""
+        regional_weather = """CREATE TABLE IF NOT EXISTS regional_weather (day_num INTEGER NOT NULL, year INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, precipitation BOOL NOT NULL, severity INTEGER NOT NULL, duration INTEGER NOT NULL, precip_value INTEGER NOT NULL, precip_event BOOL NOT NULL)"""
         natural_events = """CREATE TABLE IF NOT EXISTS natural_events (day_num INTEGER NOT NULL, year INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, event_name STRING NOT NULL, severity INTEGER NOT NULL, event_description STRING NOT NULL)"""
         astral_events = """CREATE TABLE IF NOT EXISTS astral_events (day_num INTEGER NOT NULL, year INTEGER NOT NULL, season STRING NOT NULL, astral_name STRING NOT NULL, astral_type STRING NOT NULL, event_description STRING NOT NULL)"""
         master_timeline = """CREATE TABLE IF NOT EXISTS master_timeline (day_num INTEGER NOT NULL, year INTEGER NOT NULL, season STRING NOT NULL, region_id INTEGER NOT NULL, biome_name STRING NOT NULL, precip_event BOOL NOT NULL, astral_event STRING NOT NULL, natural_event STRING NOT NULL)"""

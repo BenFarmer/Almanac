@@ -33,13 +33,13 @@ REGION_ID = 0
 BIOME_NAME = 1
 
 # precip_chance season variables
-SPRING_BASE = 40
-SUMMER_BASE = 20
+SPRING_BASE = 50
+SUMMER_BASE = 10
 FALL_BASE = 30
 WINTER_BASE = 20
 
 # precip_chance biome variables
-DESERT_MOD = 5  # // DESERT_MOD
+DESERT_MOD = 8  # // DESERT_MOD
 JUNGLE_MOD = 2  # * JUNGLE_MOD
 MOUNTAIN_MOD = 1.5  # // MOUNTAIN_MOD
 SWAMP_MOD = 2  # * SWAMP_MOD
@@ -56,6 +56,10 @@ ZONE_1_5_SEVERITY_MOD = 15
 # weight variables
 WEIGHT_MULTIPLE_MOD = 10  # * WEIGHT_MULTIPLE_MOD
 WEIGHT_INVERSE = 6  # WEIGHT_INVERSE - SEVERITY
+
+# constants for new precip system
+STARTING_PRECIP_VALUE = 50  # starting value for weight
+DRY_WEIGHT_BASE = 0
 
 
 class RegionalWeather:
@@ -121,8 +125,8 @@ class RegionalWeather:
             if precipitation is False:
                 # values for a 'dry' day
                 severity = 0
-                duration = 1
-                weight = 0
+                duration = 0
+                weight = self.get_dry_weight(id)  # returns the dry day weight
             else:
                 severity = (
                     self.calc_severity()
@@ -133,6 +137,11 @@ class RegionalWeather:
                 weight = self.calc_weight(
                     severity
                 )  # returns a weight (impact) score (0 - 100)
+                self.precip_event = True
+
+            prior_precip_value = self.get_prior_precip_value(id)
+            precip_value = int(prior_precip_value) + int(weight)
+
             self.weather_pack.append(
                 (
                     self.time["day_num"],
@@ -142,10 +151,46 @@ class RegionalWeather:
                     precipitation,
                     severity,
                     duration,
-                    weight,
+                    precip_value,
                     self.precip_event,
                 )
             )
+
+    def get_prior_precip_value(self, id):
+        biome = self.region_pack[id][BIOME_NAME]
+        cursor = self.conn.cursor()
+        if self.time["day_num"] == 0:
+            if biome == "forest":
+                start = 0
+            elif biome == "plains":
+                start = -25
+            elif biome == "desert":
+                start = -200
+            elif biome == "swamp":
+                start = 180
+            elif biome == "jungle":
+                start = 160
+            elif biome == "mountain":
+                start = -50
+            elif biome == "lake" or biome == "river":
+                start = 25
+            elif biome == "beach":
+                start = 50
+
+            return start
+        else:
+            prior_day_num = self.time["day_num"] - 1
+            query = cursor.execute(
+                f"""
+                SELECT precip_value
+                FROM regional_weather
+                WHERE day_num = {prior_day_num}
+                AND year = {self.time["year"]}
+                AND region_id = {self.region_pack[id][REGION_ID]}
+                """
+            )
+            for result in query:
+                return result[0]
 
     def calc_precipitation(self, id):
         """this function takes the base precipitation chance from
@@ -200,6 +245,30 @@ class RegionalWeather:
         else:
             return False
 
+    def get_dry_weight(self, id):
+        biome = self.region_pack[id][BIOME_NAME]
+        weight = DRY_WEIGHT_BASE
+        # fuck with this
+        if biome == "forest":
+            weight += -2
+        elif biome == "plains":
+            weight += -2
+        elif biome == "desert":
+            weight += -1
+        elif biome == "swamp":
+            weight += -7
+        elif biome == "jungle":
+            weight += -7
+        elif biome == "mountain":
+            weight += -2
+        elif biome == "lake":
+            weight += -2
+        elif biome == "river":
+            weight += -2
+        elif biome == "beach":
+            weight += -2
+        return weight
+
     def calc_severity(self):
         temp_zone = self.args["location_info"]["temp_zone"]
         severity = self.percentile.norm_rarity()
@@ -220,12 +289,22 @@ class RegionalWeather:
                 return severity
 
     def calc_duration(self, severity):
-        if severity == 1:
-            return 1 + random.randint(0, 2)
-        return 1 + random.randint(0, 1)
+        """Currently not implemented and only will ever return a value
+        of 1. Potentially in the future having longer periods of rain would
+        be interesting but at the moment it is purely feature-creep.
+        """
+        return 1
+
+    #        if severity == 1:
+    #            return 1 + random.randint(0, 2)
+    #        return 1 + random.randint(0, 1)
 
     def calc_weight(self, severity):
-        weight = (WEIGHT_INVERSE - severity) * WEIGHT_MULTIPLE_MOD
+        # weight inverse -- 6
+        # severity - 1-5 leaning towards 5
+        # weight multiple mod -- 10
+        # weight = (WEIGHT_INVERSE - severity) * WEIGHT_MULTIPLE_MOD
+        weight = 5 + ((WEIGHT_INVERSE - severity) / 2)
         return weight
 
     def _sqlite(self):
@@ -240,7 +319,7 @@ class RegionalWeather:
             precipitation = item[4]
             severity = item[5]
             duration = item[6]
-            weight = item[7]
+            precip_value = item[7]
             precip_event = item[8]
 
             astral_event = None
@@ -249,11 +328,11 @@ class RegionalWeather:
             insert_regional_weather = f"""
                     INSERT INTO regional_weather (
                         day_num, year, season, region_id, biome_name, precipitation,
-                        severity, duration, weight, precip_event
+                        severity, duration, precip_value, precip_event
                         )
                     VALUES (
                         {day_num}, {year}, '{season}', {region_id}, '{biome_name}', {precipitation},
-                        {severity}, {duration}, {weight}, {precip_event}
+                        {severity}, {duration}, {precip_value}, {precip_event}
                         )
                     """
 

@@ -16,3 +16,6 @@ event_names: ["astral", "natural"]
 
 # weather constants
 base_precip_chance: 0
+
+# location
+biomes: ["forest", "plains", "desert", "swamp", "jungle", "mountain", "lake", "river", "beach"]
