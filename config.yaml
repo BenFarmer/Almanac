@@ -1,3 +1,8 @@
+############## SYSTEM ##################
+sqlite_path: "/home/benjamin-farmer/Envs/sanjuandata/local_db/sqlite/Almanac.db"
+
+
+############## LOCATION ################
 #cur_time
 season_num_start: 0
 

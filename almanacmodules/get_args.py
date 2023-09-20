@@ -123,6 +123,7 @@ class GetArguments:
                 "base_precip_chance": self.yaml_config["base_precip_chance"],
             },
             "system": {
+                "sqlite_path": self.yaml_config["sqlite_path"],
                 "log_level": self.args.logging_level,
                 "report": self.args.report,
                 "run_times": int(self.args.run_times),

@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/bin/env python3
 
 # long-help
 """ Almanac: comprehensive world-building utility to be used in conjunction
@@ -56,7 +56,7 @@ def main():
     setup_logging(args["system"]["log_level"])
     logging.debug(args)
 
-    conn = create_conn()
+    conn = create_conn(args["system"]["sqlite_path"])
 
     country_validator(args, time, master_config, conn)
 
@@ -79,8 +79,10 @@ def setup_logging(logging_level):
     )
 
 
-def create_conn():
-    conn = sqlite3.connect(r"/home/ben/Envs/databases/sqlite/Almanac.db")
+def create_conn(sqlite_path):
+    # this formatting of the path is to catch backslashes
+    path = r"{}".format(sqlite_path)
+    conn = sqlite3.connect(path)
     return conn
 
 
