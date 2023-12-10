@@ -42,7 +42,8 @@ class GetArguments:
         self.parser.add_argument(
             "-d",
             "--delete_logs",
-            choices=["y", "n"],
+            action="store_True",
+            default="False",
             help="option to delete previous Almanac dev and user logs",
         )
 
@@ -57,7 +58,8 @@ class GetArguments:
         self.parser.add_argument(
             "-r",
             "--report",
-            choices=["y", "n"],
+            action="store_True",
+            default="False",
             help="option to run reporting on currenct Almanac run",
         )
 
@@ -70,7 +72,7 @@ class GetArguments:
 
         self.args = self.parser.parse_args()
 
-        if self.args.delete_logs == "y":
+        if self.args.delete_logs:
             logging.info("[bold red blink] Resetting Logs")
             LogReset()
 

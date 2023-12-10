@@ -53,30 +53,17 @@ def main():
     get_arguments = GetArguments(master_config)
     args, time = get_arguments.dicts()
 
-    setup_logging(args["system"]["log_level"])
     logging.debug(args)
 
     conn = create_conn(args["system"]["sqlite_path"])
 
-    country_validator(args, time, master_config, conn)
+    if country_validator(location_name = args["location_info"]["location_name"], master_config):
+        start_day_index(args, time, conn)
 
-    if args["system"]["report"] == "y":
+    if args["system"]["report"]:
         Reports(master_config, args, time, conn)
 
     logging.info("[bold red] End of Almanac")
-
-
-def setup_logging(logging_level):
-    log_level = str(logging_level).upper()
-    rprint(f"[bold red]Current Log Level:[/][bold red blink] {log_level}")
-
-    FORMAT = "%(message)s"
-    logging.basicConfig(
-        level=logging.getLevelName(log_level),
-        format=FORMAT,
-        datefmt="[%X]",
-        handlers=[RichHandler(markup=True)],
-    )
 
 
 def create_conn(sqlite_path):
@@ -86,7 +73,7 @@ def create_conn(sqlite_path):
     return conn
 
 
-def country_validator(args, time, master_config, conn):
+def country_validator(location_name: str, master_config):
     """validates that the input country exists within the
     master_config and if it fails, re-runs the validator
     with a new input country.
@@ -95,19 +82,20 @@ def country_validator(args, time, master_config, conn):
     for row in master_config.world_config_master:
         if row.name not in accepted_countries:
             accepted_countries.append(row.name)
-
-    if args["location_info"]["location_name"] in accepted_countries:
-        logging.info(
-            f"[bold red]input_country validated: {args['location_info']['location_name']}"
-        )
-        start_day_index(args, time, conn)
-    else:
-        rprint("[red]This country doesn't exist in my library of accepted countries")
-        if input("Would you like to try again? y/n: ") == "y":
-            args["location_info"]["location_name"] = input(
+    
+    accepted = False
+    while accepted is False:
+        if location_name in accepted_countries:
+            logging.info(
+                f"[bold red]input_country validated: {location_name}}"
+            )
+            accepted = True
+        else:
+            rprint("[red]This country doesn't exist in my library of accepted countries")
+            location_name = input(
                 "Please input the country name again: "
             )
-            country_validator(args, time, master_config, conn)
+    return True
 
 
 def start_day_index(args, time, conn):
